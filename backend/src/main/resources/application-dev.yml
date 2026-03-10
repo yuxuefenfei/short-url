@@ -1,0 +1,72 @@
+# 开发环境配置文件
+spring:
+  # 数据源配置（开发环境 - 使用H2内存数据库）
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:short_url_db;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_UPPER=false
+    username: sa
+    password:
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      pool-name: ShortUrlHikariCP
+
+  # H2控制台（开发环境启用）
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  # 自动执行建表SQL
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      encoding: UTF-8
+      continue-on-error: true
+
+  # Redis配置（开发环境）
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      password: RcsTRtCzV8qmj3y$Mk*E
+      database: 0
+
+# 开发环境特殊配置
+logging:
+  level:
+    com.example.shorturl: debug
+    com.mybatis-flex: trace
+    org.springframework.security: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# 开发环境JWT配置（较短的过期时间便于测试）
+jwt:
+  expiration: 3600000  # 1小时
+
+# 开发环境短网址配置
+short-url:
+  domain: http://localhost:8080
+  cache-expire-days: 1  # 开发环境缓存1天
+
+# 开发环境服务器配置
+server:
+  port: 8080
+
+# 开发环境Actuator配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"  # 开发环境暴露所有端点
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true

@@ -1,0 +1,105 @@
+# 生产环境配置文件
+spring:
+  # 数据源配置（生产环境）
+  datasource:
+    url: jdbc:mysql://mysql-server:3306/short_url_db?useUnicode=true&characterEncoding=utf8&useSSL=true&serverTimezone=UTC&allowPublicKeyRetrieval=true&useServerPrepStmts=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&rewriteBatchedStatements=true
+    username: ${DB_USERNAME:shorturl_user}
+    password: ${DB_PASSWORD:secure_password}
+    hikari:
+      minimum-idle: 20
+      maximum-pool-size: 100
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+      pool-name: ShortUrlHikariCP
+
+  # Redis配置（生产环境）
+  data:
+    redis:
+      host: ${REDIS_HOST:redis-server}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: ${REDIS_DB:0}
+      timeout: 5000ms
+      lettuce:
+        pool:
+          max-active: 50
+          max-wait: 2000ms
+          max-idle: 20
+          min-idle: 10
+          time-between-eviction-runs: 30000
+        shutdown-timeout: 5000ms
+
+# 生产环境安全配置
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript,text/css
+    min-response-size: 1024
+  ssl:
+    enabled: ${SSL_ENABLED:false}
+
+# 生产环境日志配置
+logging:
+  level:
+    com.example.shorturl: info
+    com.mybatis-flex: warn
+    org.springframework.security: info
+  file:
+    name: /var/log/short-url/app.log
+  logback:
+    rollingpolicy:
+      file-name-pattern: /var/log/short-url/app.%d{yyyy-MM-dd}.%i.log
+      max-file-size: 100MB
+      max-history: 30
+      total-size-cap: 3GB
+
+# 生产环境JWT配置（较长的过期时间）
+jwt:
+  secret: ${JWT_SECRET:your-production-secret-key-must-be-very-long-and-secure}
+  expiration: 86400000  # 24小时
+
+# 生产环境短网址配置
+short-url:
+  domain: ${SHORT_URL_DOMAIN:https://short.ly}
+  cache-expire-days: 30  # 生产环境缓存30天
+
+# 生产环境Actuator配置（仅暴露必要端点）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      roles: ACTUATOR
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: false  # 生产环境通常通过专门的监控系统
+  server:
+    port: 8081  # 管理端口与业务端口分离
+
+app:
+  # 生产环境安全限制
+  security:
+    rate-limit:
+      requests-per-minute: 100
+      ip-blacklist-enabled: true
+    cors:
+      allowed-origins: ${CORS_ORIGINS:https://short.ly,https://admin.short.ly}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
+      allowed-headers: "*"
+      max-age: 3600
+  # 生产环境监控配置
+  monitoring:
+    enabled: true
+    log-requests: true
+    log-slow-queries: true
+    slow-query-threshold: 1000  # 1秒以上的查询记录日志

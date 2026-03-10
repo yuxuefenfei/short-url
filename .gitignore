@@ -1,0 +1,24 @@
+# Default ignored files
+/shelf/
+/.idea/
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
+
+# target文件夹
+/sdic-sop-api/target/
+/sdic-sop-entity/target/
+/sdic-sop-service/target/
+# log文件夹
+**/log/
+
+**/target/
+**/logs/
+**/.idea/
+**/.vscode/
+**/node_modules/
+**/dist/
+**/*.iml
+

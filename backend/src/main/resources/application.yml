@@ -1,0 +1,108 @@
+# 短网址管理系统配置文件
+spring:
+  application:
+    name: short-url
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/short_url_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useServerPrepStmts=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&rewriteBatchedStatements=true
+    username: root
+    password: root123
+    hikari:
+      minimum-idle: 10
+      maximum-pool-size: 50
+      idle-timeout: 300000
+      max-lifetime: 1800000
+      connection-timeout: 30000
+      leak-detection-threshold: 60000
+      pool-name: ShortUrlHikariCP
+
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6380
+      password: RcsTRtCzV8qmj3y$Mk*E
+      database: 0
+      timeout: 3000ms
+      client-type: lettuce
+      lettuce:
+        pool:
+          max-active: 32
+          max-wait: 1000ms
+          max-idle: 16
+          min-idle: 8
+          time-between-eviction-runs: 30000
+        shutdown-timeout: 2000ms
+
+# MyBatis-Flex配置
+mybatis-flex:
+  mapper-packages: com.example.shorturl.dao
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# Actuator监控配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,heapdump,threaddump
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  metrics:
+    tags:
+      application: short-url-service
+    export:
+      prometheus:
+        enabled: true
+        step: 1m
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+  health:
+    db:
+      enabled: true
+    redis:
+      enabled: true
+    diskspace:
+      enabled: true
+
+# JWT配置
+jwt:
+  secret: mySecretKey123456789012345678901234567890
+  expiration: 86400000  # 24小时
+
+# 短网址配置
+short-url:
+  domain: https://short.ly
+  key-length: 6
+  cache-expire-days: 7
+
+# 服务器配置
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# 日志配置
+logging:
+  level:
+    com.example.shorturl: debug
+    com.mybatis-flex: debug
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/short-url.log
