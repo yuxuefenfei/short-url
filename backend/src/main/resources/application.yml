@@ -18,7 +18,7 @@ spring:
       leak-detection-threshold: 60000
       pool-name: ShortUrlHikariCP
 
-  # Redis配置
+  # Redis 配置
   data:
     redis:
       host: localhost
@@ -36,14 +36,14 @@ spring:
           time-between-eviction-runs: 30000
         shutdown-timeout: 2000ms
 
-# MyBatis-Flex配置
+# MyBatis-Flex 配置
 mybatis-flex:
   mapper-packages: com.example.shorturl.dao
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
-# Actuator监控配置
+# Actuator 监控配置
 management:
   endpoints:
     web:
@@ -79,10 +79,10 @@ management:
     diskspace:
       enabled: true
 
-# JWT配置
+# JWT 配置
 jwt:
   secret: mySecretKey123456789012345678901234567890
-  expiration: 86400000  # 24小时
+  expiration: 86400000  # 24 小时
 
 # 短网址配置
 short-url:

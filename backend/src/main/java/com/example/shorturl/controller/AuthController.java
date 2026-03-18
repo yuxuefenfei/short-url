@@ -4,6 +4,7 @@ import com.example.shorturl.common.response.ApiResponse;
 import com.example.shorturl.model.dto.LoginRequest;
 import com.example.shorturl.model.dto.RegisterRequest;
 import com.example.shorturl.service.AuthService;
+import com.example.shorturl.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,9 @@ public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 用户登录
@@ -80,6 +84,12 @@ public class AuthController {
             log.error("用户注册失败: username={}, error={}", registerRequest.getUsername(), e.getMessage());
             throw e;
         }
+    }
+
+    @GetMapping("/check-username")
+    public ApiResponse<UsernameCheckResponse> checkUsername(@RequestParam("username") String username) {
+        boolean exists = userService.usernameExists(username);
+        return ApiResponse.success(new UsernameCheckResponse(exists));
     }
 
     /**
@@ -158,5 +168,8 @@ public class AuthController {
             log.error("获取当前用户信息失败: error={}", e.getMessage());
             throw e;
         }
+    }
+
+    public record UsernameCheckResponse(boolean exists) {
     }
 }

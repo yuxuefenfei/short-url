@@ -81,6 +81,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/login",
                                 "/api/auth/register",
+                                "/api/auth/check-username",
+                                "/api/client-errors",
                                 "/api/shorten",
                                 "/api/stats/**",
                                 "/{shortKey:^[\\w]+$}"

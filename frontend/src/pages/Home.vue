@@ -281,15 +281,16 @@ const handleSubmit = async () => {
     loading.value = true
 
     const response = await shortenUrl(form)
+    const payload = response.data
     result.value = {
-      ...response,
-      shortUrl: getFullShortUrl(response.shortKey),
+      ...payload,
+      shortUrl: payload.shortUrl || getFullShortUrl(payload.shortKey),
       createdTime: new Date().toISOString()
     }
 
     // 添加到最近使用列表
     urlStore.addRecentUrl({
-      shortKey: response.shortKey,
+      shortKey: payload.shortKey,
       originalUrl: form.originalUrl,
       title: form.title,
       createdTime: result.value.createdTime

@@ -1,100 +1,127 @@
 # 短网址管理系统数据字典
 
-## 📋 表结构详细说明
+本文档描述当前项目核心数据库表结构，并与 [schema.sql](C:/Users/13080/Workspace/short-url/docs/database/schema.sql) 保持一致。
 
-### 1. 短网址映射表 (short_url_mapping)
+## 1. `short_url_mapping`
 
-| 字段名 | 数据类型 | 长度 | 允许空 | 默认值 | 主键 | 自增 | 说明 |
-|--------|----------|------|--------|--------|------|------|------|
-| id | BIGINT UNSIGNED | 20 | NO | NULL | 是 | 是 | 主键ID |
-| short_key | VARCHAR | 20 | NO | NULL | 否 | 否 | 短网址key，唯一索引 |
-| original_url | VARCHAR | 2048 | NO | NULL | 否 | 否 | 原始长网址 |
-| title | VARCHAR | 255 | YES | NULL | 否 | 否 | 网址标题，可选 |
-| click_count | BIGINT UNSIGNED | 20 | NO | 0 | 否 | 否 | 点击次数统计 |
-| status | TINYINT | 4 | NO | 1 | 否 | 否 | 状态：1正常，0禁用 |
-| created_time | DATETIME | 19 | NO | CURRENT_TIMESTAMP | 否 | 否 | 创建时间 |
-| expired_time | DATETIME | 19 | YES | NULL | 否 | 否 | 过期时间，NULL表示永不过期 |
+短链主表。
 
-**索引说明：**
-- PRIMARY KEY (id): 主键索引
-- UNIQUE KEY uk_short_key (short_key): 短网址key唯一索引
-- KEY idx_created_time (created_time): 创建时间索引
-- KEY idx_status (status): 状态索引
+| 字段 | 类型 | 允许空 | 默认值 | 说明 |
+|---|---|---|---|---|
+| `id` | `BIGINT UNSIGNED` | 否 | 自增 | 主键 ID |
+| `short_key` | `VARCHAR(20)` | 否 | - | 短链 Key，唯一 |
+| `original_url` | `VARCHAR(2048)` | 否 | - | 原始长链接 |
+| `title` | `VARCHAR(255)` | 是 | `NULL` | 标题 |
+| `click_count` | `BIGINT UNSIGNED` | 否 | `0` | 累计点击数 |
+| `status` | `TINYINT` | 否 | `1` | 状态：`1` 启用，`0` 禁用 |
+| `created_time` | `DATETIME` | 否 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `updated_time` | `DATETIME` | 否 | `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` | 更新时间 |
+| `expired_time` | `DATETIME` | 是 | `NULL` | 过期时间，`NULL` 表示不过期 |
 
----
+索引：
 
-### 2. 访问日志表 (url_access_log)
+- `PRIMARY KEY (id)`
+- `UNIQUE KEY uk_short_key (short_key)`
+- `KEY idx_created_time (created_time)`
+- `KEY idx_status (status)`
 
-| 字段名 | 数据类型 | 长度 | 允许空 | 默认值 | 主键 | 自增 | 说明 |
-|--------|----------|------|--------|--------|------|------|------|
-| id | BIGINT UNSIGNED | 20 | NO | NULL | 是 | 是 | 主键ID |
-| short_key | VARCHAR | 20 | NO | NULL | 否 | 否 | 短网址key |
-| user_agent | TEXT | - | YES | NULL | 否 | 否 | 用户浏览器信息 |
-| ip_address | VARCHAR | 45 | YES | NULL | 否 | 否 | 访问者IP地址 |
-| access_time | DATETIME | 19 | NO | CURRENT_TIMESTAMP | 否 | 否 | 访问时间 |
+## 2. `url_access_log`
 
----
+短链访问日志表。
 
-### 3. 用户表 (user)
+| 字段 | 类型 | 允许空 | 默认值 | 说明 |
+|---|---|---|---|---|
+| `id` | `BIGINT UNSIGNED` | 否 | 自增 | 主键 ID |
+| `short_key` | `VARCHAR(20)` | 否 | - | 被访问的短链 Key |
+| `user_agent` | `TEXT` | 是 | `NULL` | 用户代理 |
+| `ip_address` | `VARCHAR(45)` | 是 | `NULL` | 客户端 IP |
+| `access_time` | `DATETIME` | 否 | `CURRENT_TIMESTAMP` | 访问时间 |
 
-| 字段名 | 数据类型 | 长度 | 允许空 | 默认值 | 主键 | 自增 | 说明 |
-|--------|----------|------|--------|--------|------|------|------|
-| id | BIGINT UNSIGNED | 20 | NO | NULL | 是 | 是 | 主键ID |
-| username | VARCHAR | 50 | NO | NULL | 否 | 否 | 用户名，唯一索引 |
-| password | VARCHAR | 255 | NO | NULL | 否 | 否 | BCrypt加密密码 |
-| email | VARCHAR | 100 | YES | NULL | 否 | 否 | 邮箱地址 |
-| role | VARCHAR | 20 | NO | USER | 否 | 否 | 角色：USER/ADMIN |
-| status | TINYINT | 4 | NO | 1 | 否 | 否 | 状态：1正常，0禁用 |
-| last_login_time | DATETIME | 19 | YES | NULL | 否 | 否 | 最后登录时间 |
-| created_time | DATETIME | 19 | NO | CURRENT_TIMESTAMP | 否 | 否 | 创建时间 |
-| updated_time | DATETIME | 19 | NO | CURRENT_TIMESTAMP | 否 | 否 | 更新时间 |
+索引：
 
----
+- `PRIMARY KEY (id)`
+- `KEY idx_short_key (short_key)`
+- `KEY idx_access_time (access_time)`
+- `KEY idx_ip_address (ip_address)`
 
-### 4. 用户操作日志表 (user_operation_log)
+## 3. `user`
 
-| 字段名 | 数据类型 | 长度 | 允许空 | 默认值 | 主键 | 自增 | 说明 |
-|--------|----------|------|--------|--------|------|------|------|
-| id | BIGINT UNSIGNED | 20 | NO | NULL | 是 | 是 | 主键ID |
-| user_id | BIGINT UNSIGNED | 20 | NO | NULL | 否 | 否 | 用户ID，外键 |
-| operation_type | VARCHAR | 50 | NO | NULL | 否 | 否 | 操作类型 |
-| operation_desc | VARCHAR | 500 | YES | NULL | 否 | 否 | 操作描述 |
-| module | VARCHAR | 50 | NO | NULL | 否 | 否 | 操作模块 |
-| ip_address | VARCHAR | 45 | YES | NULL | 否 | 否 | 操作IP地址 |
-| user_agent | TEXT | - | YES | NULL | 否 | 否 | 用户浏览器信息 |
-| request_path | VARCHAR | 500 | YES | NULL | 否 | 否 | 请求路径 |
-| request_method | VARCHAR | 10 | YES | NULL | 否 | 否 | 请求方法 |
-| request_params | TEXT | - | YES | NULL | 否 | 否 | 请求参数 |
-| response_result | TEXT | - | YES | NULL | 否 | 否 | 响应结果 |
-| status | TINYINT | 4 | NO | 1 | 否 | 否 | 操作状态：1成功，0失败 |
-| error_message | VARCHAR | 1000 | YES | NULL | 否 | 否 | 错误信息 |
-| operation_time | DATETIME | 19 | NO | CURRENT_TIMESTAMP | 否 | 否 | 操作时间 |
+用户表。
 
-## 🔧 字段枚举值说明
+| 字段 | 类型 | 允许空 | 默认值 | 说明 |
+|---|---|---|---|---|
+| `id` | `BIGINT UNSIGNED` | 否 | 自增 | 主键 ID |
+| `username` | `VARCHAR(50)` | 否 | - | 用户名，唯一 |
+| `password` | `VARCHAR(255)` | 否 | - | BCrypt 密码哈希 |
+| `email` | `VARCHAR(100)` | 是 | `NULL` | 邮箱 |
+| `role` | `VARCHAR(20)` | 否 | `USER` | 角色：`USER` / `ADMIN` |
+| `status` | `TINYINT` | 否 | `1` | 状态：`1` 启用，`0` 禁用 |
+| `last_login_time` | `DATETIME` | 是 | `NULL` | 最后登录时间 |
+| `created_time` | `DATETIME` | 否 | `CURRENT_TIMESTAMP` | 创建时间 |
+| `updated_time` | `DATETIME` | 否 | `CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP` | 更新时间 |
 
-### 状态字段 (status)
-- 0: 禁用/失败
-- 1: 正常/成功
+索引：
 
-### 用户角色 (role)
-- USER: 普通用户
-- ADMIN: 管理员
+- `PRIMARY KEY (id)`
+- `UNIQUE KEY uk_username (username)`
+- `KEY idx_role (role)`
+- `KEY idx_status (status)`
+- `KEY idx_created_time (created_time)`
 
-## 📊 数据库设计特点
+## 4. `user_operation_log`
 
-### 1. 性能优化
-- 合理的索引设计
-- 使用DATETIME类型
-- 分区表设计支持大数据量
-- 外键约束确保数据完整性
+后台操作审计日志表。
 
-### 2. 安全性
-- 密码BCrypt加密存储
-- 操作日志完整记录
-- IP地址和User-Agent记录
+| 字段 | 类型 | 允许空 | 默认值 | 说明 |
+|---|---|---|---|---|
+| `id` | `BIGINT UNSIGNED` | 否 | 自增 | 主键 ID |
+| `user_id` | `BIGINT UNSIGNED` | 否 | - | 操作用户 ID |
+| `operation_type` | `VARCHAR(50)` | 否 | - | 操作类型，如 `CREATE` / `UPDATE` / `DELETE` / `QUERY` |
+| `operation_desc` | `VARCHAR(500)` | 是 | `NULL` | 操作描述 |
+| `module` | `VARCHAR(50)` | 否 | - | 模块名，如 `USER_MANAGEMENT` |
+| `ip_address` | `VARCHAR(45)` | 是 | `NULL` | 操作 IP |
+| `user_agent` | `TEXT` | 是 | `NULL` | 用户代理 |
+| `request_path` | `VARCHAR(500)` | 是 | `NULL` | 请求路径 |
+| `request_method` | `VARCHAR(10)` | 是 | `NULL` | 请求方法 |
+| `request_params` | `TEXT` | 是 | `NULL` | 请求参数 |
+| `response_result` | `TEXT` | 是 | `NULL` | 响应摘要 |
+| `status` | `TINYINT` | 否 | `1` | 状态：`1` 成功，`0` 失败 |
+| `error_message` | `VARCHAR(1000)` | 是 | `NULL` | 错误信息 |
+| `operation_time` | `DATETIME` | 否 | `CURRENT_TIMESTAMP` | 操作时间 |
 
-### 3. 扩展性
-- 软删除设计
-- 状态字段设计
-- 预留字段支持功能扩展
-- 分区和归档机制
+索引：
+
+- `PRIMARY KEY (id)`
+- `KEY idx_user_id (user_id)`
+- `KEY idx_operation_time (operation_time)`
+- `KEY idx_operation_type (operation_type)`
+- `KEY idx_module (module)`
+- `CONSTRAINT fk_user_operation_log_user_id FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE`
+
+## 字段取值约定
+
+### 状态字段 `status`
+
+- `1`：成功 / 启用
+- `0`：失败 / 禁用
+
+### 角色字段 `role`
+
+- `ADMIN`：管理员
+- `USER`：普通用户
+
+### 常见操作类型 `operation_type`
+
+- `CREATE`
+- `UPDATE`
+- `DELETE`
+- `QUERY`
+- `LOGIN`
+- `LOGOUT`
+
+### 常见模块 `module`
+
+- `USER_MANAGEMENT`
+- `URL_MANAGEMENT`
+- `SYSTEM_MONITOR`
+- `AUTH`

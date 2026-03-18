@@ -267,6 +267,7 @@ import {
   ReloadOutlined
 } from '@ant-design/icons-vue'
 import { getUserList, createUser, updateUserInfo, updateUserStatus, deleteUser as deleteUserApi, resetUserPassword } from '@/api/admin'
+import { checkUsernameExists } from '@/api/auth'
 
 // 搜索和过滤
 const searchKeyword = ref('')
@@ -354,6 +355,20 @@ const createRules = {
 }
 
 // 编辑用户表单
+createRules.username.push({
+  validator: async (_rule, value) => {
+    if (!value || value.length < 3) {
+      return Promise.resolve()
+    }
+    const response = await checkUsernameExists(value.trim())
+    if (response.code === 200 && response.data?.exists) {
+      return Promise.reject('用户名已存在')
+    }
+    return Promise.resolve()
+  },
+  trigger: 'blur'
+})
+
 const showEditModal = ref(false)
 const editing = ref(false)
 const editFormRef = ref()

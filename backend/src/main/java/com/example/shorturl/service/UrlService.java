@@ -20,35 +20,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-/**
- * 短网址服务类
- * <p>
- * 模块职责：
- * - 提供短网址生成和管理服务
- * - 处理短网址访问重定向
- * - 管理访问统计和缓存
- * <p>
- * 核心功能：
- * - 生成唯一的短网址key
- * - 存储短网址映射关系
- * - 处理访问重定向
- * - 记录访问日志
- * - Redis缓存管理
- * <p>
- * 性能优化：
- * - Redis缓存热点数据
- * - 异步日志记录
- * - 原子操作避免冲突
- * <p>
- * 依赖关系：
- * - 被UrlController调用
- * - 使用UrlMappingDao访问数据库
- * - 使用StringRedisTemplate管理缓存
- */
 @Slf4j
 @Service
 public class UrlService {
@@ -61,57 +42,26 @@ public class UrlService {
 
     @Autowired
     private AsyncLogService asyncLogService;
+
     @Autowired
     private StringRedisTemplate redisTemplate;
+
     @Value("${short-url.domain:https://short.ly}")
     private String shortUrlDomain;
+
     @Value("${short-url.cache-expire-days:7}")
     private int cacheExpireDays;
 
-    /**
-     * 获取URL映射DAO（仅供内部使用）
-     */
-    protected UrlMappingDao getUrlMappingDao() {
-        return urlMappingDao;
-    }
-
-    /**
-     * 清除URL缓存
-     */
-    public void clearUrlCache(String shortKey) {
-        // 清除Redis缓存
-        try {
-            String cacheKey = "shortUrlMapping::" + shortKey;
-            redisTemplate.delete(cacheKey);
-            log.debug("缓存已清除: key={}", shortKey);
-        } catch (Exception e) {
-            log.warn("清除缓存失败: key={}, error={}", shortKey, e.getMessage());
-        }
-    }
-
-    /**
-     * 创建短网址
-     *
-     * @param originalUrl 原始URL
-     * @param title       网址标题
-     * @param expiredTime 过期时间
-     * @return 短网址key
-     */
     @Transactional
     public String createShortUrl(String originalUrl, String title, LocalDateTime expiredTime) {
-        // 参数验证
         if (!StringUtils.hasText(originalUrl)) {
             throw new BusinessException(ResponseStatus.INVALID_URL_FORMAT);
         }
-
         if (originalUrl.length() > 2048) {
             throw new BusinessException(ResponseStatus.URL_LENGTH_EXCEEDED);
         }
 
-        // 生成唯一的短网址key
         String shortKey = generateUniqueShortKey();
-
-        // 创建短网址映射
         ShortUrlMapping mapping = new ShortUrlMapping();
         mapping.setShortKey(shortKey);
         mapping.setOriginalUrl(originalUrl);
@@ -119,132 +69,40 @@ public class UrlService {
         mapping.setExpiredTime(expiredTime);
         mapping.setClickCount(0L);
         mapping.setStatus(1);
+        mapping.setCreatedTime(LocalDateTime.now());
+        mapping.setUpdatedTime(LocalDateTime.now());
 
-        // 保存到数据库
         urlMappingDao.insert(mapping);
-
-        // 缓存会自动处理，通过@CachePut注解
-
-        log.info("短网址创建成功: key={}, url={}", shortKey, originalUrl);
-
         return shortKey;
     }
 
-    /**
-     * 生成唯一的短网址key
-     */
-    private String generateUniqueShortKey() {
-        String shortKey;
-        int attempts = 0;
-        final int maxAttempts = 10;
-
-        do {
-            shortKey = ShortUrlGenerator.generateShortKey();
-            attempts++;
-
-            // 使用Redis原子操作检查唯一性
-            String key = "short_url_key:" + shortKey;
-            Boolean success = redisTemplate.opsForValue().setIfAbsent(key, "1", 24, TimeUnit.HOURS);
-
-            if (Boolean.TRUE.equals(success)) {
-                return shortKey;
-            }
-
-            // 如果Redis中已存在，检查数据库中是否真的存在
-            ShortUrlMapping existing = urlMappingDao.selectOneByQuery(
-                    QueryWrapper.create()
-                            .where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.eq(shortKey))
-            );
-
-            if (existing == null) {
-                // 数据库中不存在，可以安全使用
-                return shortKey;
-            }
-
-        } while (attempts < maxAttempts);
-
-        throw new BusinessException(ResponseStatus.SYSTEM_ERROR.getCode(),
-                "无法生成唯一的短网址key，请稍后重试");
-    }
-
-    /**
-     * 根据短网址key获取原始URL
-     *
-     * @param shortKey 短网址key
-     * @return 原始URL，如果不存在或已过期返回null
-     */
     @Cacheable(value = "shortUrlMapping", key = "#shortKey", unless = "#result == null")
     public String getOriginalUrl(String shortKey) {
         if (!ShortUrlGenerator.isValidShortKey(shortKey)) {
             throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
         }
 
-        // 从数据库查询
         ShortUrlMapping mapping = urlMappingDao.selectOneByQuery(
-                QueryWrapper.create()
-                        .where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.eq(shortKey))
+                QueryWrapper.create().where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.eq(shortKey))
         );
-
         if (mapping == null) {
             throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
         }
-
-        // 检查状态和过期时间
         if (!mapping.isAvailable()) {
             if (mapping.isExpired()) {
                 throw new BusinessException(ResponseStatus.SHORT_URL_EXPIRED);
-            } else {
-                throw new BusinessException(ResponseStatus.SHORT_URL_DISABLED);
             }
+            throw new BusinessException(ResponseStatus.SHORT_URL_DISABLED);
         }
 
-        // 异步更新访问统计
         asyncUpdateAccessStats(shortKey);
-
         return mapping.getOriginalUrl();
     }
 
-    /**
-     * 缓存短网址映射
-     */
-    private void cacheShortUrl(String shortKey, String originalUrl) {
-        try {
-            String cacheKey = "url:" + shortKey;
-            redisTemplate.opsForValue().set(
-                    cacheKey,
-                    originalUrl,
-                    cacheExpireDays,
-                    TimeUnit.DAYS
-            );
-        } catch (Exception e) {
-            log.warn("缓存短网址失败: key={}, error={}", shortKey, e.getMessage());
-        }
-    }
-
-    /**
-     * 异步更新访问统计
-     */
-    private void asyncUpdateAccessStats(String shortKey) {
-        // 使用异步日志服务更新访问统计
-        try {
-            asyncLogService.updateClickCount(shortKey);
-        } catch (Exception e) {
-            log.error("异步更新访问统计失败: key={}, error={}", shortKey, e.getMessage());
-        }
-    }
-
-    /**
-     * 获取短网址统计信息
-     *
-     * @param shortKey 短网址key
-     * @return 统计信息
-     */
     public UrlStats getUrlStats(String shortKey) {
         ShortUrlMapping mapping = urlMappingDao.selectOneByQuery(
-                QueryWrapper.create()
-                        .where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.eq(shortKey))
+                QueryWrapper.create().where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.eq(shortKey))
         );
-
         if (mapping == null) {
             throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
         }
@@ -255,110 +113,251 @@ public class UrlService {
         stats.setTitle(mapping.getTitle());
         stats.setTotalClicks(mapping.getClickCount());
         stats.setCreatedTime(mapping.getCreatedTime());
+        stats.setLastAccessTime(getLastAccessTime(shortKey));
         stats.setStatus(mapping.getStatus());
-
-        // 查询今日访问次数
-        LocalDateTime today = LocalDateTime.now().withHour(0).withMinute(0).withSecond(0);
-        Long todayClicks = accessLogDao.selectCountByQuery(
-                QueryWrapper.create()
-                        .where(UrlAccessLogTableDef.URL_ACCESS_LOG.SHORT_KEY.eq(shortKey))
-                        .and(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME.ge(today))
-        );
-        stats.setTodayClicks(todayClicks);
-
+        stats.setTodayClicks(getTodayClicks(shortKey));
+        stats.setTrend(getTrend(shortKey, 7));
+        stats.setAccessSources(getAccessSources(shortKey));
         return stats;
     }
 
-    /**
-     * 获取短网址列表（分页）
-     */
     public List<ShortUrlMapping> getUrlList(Integer page, Integer size, String keyword, Integer status) {
-        QueryWrapper queryWrapper = QueryWrapper.create();
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            queryWrapper.where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.ORIGINAL_URL.like(keyword))
-                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.TITLE.like(keyword))
-                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.like(keyword));
-        }
-
-        if (status != null) {
-            queryWrapper.where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.STATUS.eq(status));
-        }
-
+        QueryWrapper queryWrapper = buildUrlQuery(keyword, status);
         queryWrapper.orderBy(ShortUrlMappingTableDef.SHORT_URL_MAPPING.CREATED_TIME, false);
-
-        return urlMappingDao.selectListByQuery(queryWrapper);
+        return paginate(urlMappingDao.selectListByQuery(queryWrapper), page, size);
     }
 
-    /**
-     * 获取短网址数量
-     */
     public Long getUrlCount(String keyword, Integer status) {
-        QueryWrapper queryWrapper = QueryWrapper.create();
-
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            queryWrapper.where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.ORIGINAL_URL.like(keyword))
-                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.TITLE.like(keyword))
-                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.like(keyword));
-        }
-
-        if (status != null) {
-            queryWrapper.where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.STATUS.eq(status));
-        }
-
-        return urlMappingDao.selectCountByQuery(queryWrapper);
+        return urlMappingDao.selectCountByQuery(buildUrlQuery(keyword, status));
     }
 
-    /**
-     * 更新短网址状态
-     */
     @Transactional
     public void updateUrlStatus(Long id, Integer status) {
         ShortUrlMapping mapping = urlMappingDao.selectOneById(id);
-        if (mapping != null) {
-            mapping.setStatus(status);
-            mapping.setUpdatedTime(LocalDateTime.now());
-            urlMappingDao.update(mapping);
-            clearUrlCache(mapping.getShortKey());
+        if (mapping == null) {
+            throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
         }
+        mapping.setStatus(status);
+        mapping.setUpdatedTime(LocalDateTime.now());
+        urlMappingDao.update(mapping);
+        clearUrlCache(mapping.getShortKey());
     }
 
-    /**
-     * 根据ID获取短网址
-     */
     public ShortUrlMapping getUrlById(Long id) {
-        if (id == null) {
-            return null;
-        }
-        return urlMappingDao.selectOneById(id);
+        return id == null ? null : urlMappingDao.selectOneById(id);
     }
 
-    /**
-     * 删除短网址
-     */
+    @Transactional
+    public ShortUrlMapping updateUrl(Long id, String title, LocalDateTime expiredTime) {
+        ShortUrlMapping mapping = urlMappingDao.selectOneById(id);
+        if (mapping == null) {
+            throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
+        }
+
+        if (title != null) {
+            mapping.setTitle(title);
+        }
+        mapping.setExpiredTime(expiredTime);
+        mapping.setUpdatedTime(LocalDateTime.now());
+        urlMappingDao.update(mapping);
+        clearUrlCache(mapping.getShortKey());
+        return mapping;
+    }
+
     @Transactional
     public void deleteUrl(Long id) {
         ShortUrlMapping mapping = urlMappingDao.selectOneById(id);
-        if (mapping != null) {
-            urlMappingDao.deleteById(id);
-            clearUrlCache(mapping.getShortKey());
+        if (mapping == null) {
+            throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
+        }
+        urlMappingDao.deleteById(id);
+        clearUrlCache(mapping.getShortKey());
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalClicks() {
+        return urlMappingDao.selectListByQuery(QueryWrapper.create()).stream()
+                .mapToLong(mapping -> mapping.getClickCount() == null ? 0 : mapping.getClickCount())
+                .sum();
+    }
+
+    @Transactional(readOnly = true)
+    public long getTodayClicks() {
+        return accessLogDao.selectCountByQuery(
+                QueryWrapper.create().where(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME.ge(LocalDate.now().atStartOfDay()))
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public long getTodayNewUrls() {
+        return urlMappingDao.selectCountByQuery(
+                QueryWrapper.create().where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.CREATED_TIME.ge(LocalDate.now().atStartOfDay()))
+        );
+    }
+
+    public void clearUrlCache(String shortKey) {
+        try {
+            redisTemplate.delete("shortUrlMapping::" + shortKey);
+        } catch (Exception e) {
+            log.warn("清理缓存失败: key={}, error={}", shortKey, e.getMessage());
         }
     }
 
-    /**
-     * 短网址统计信息类
-     */
+    private QueryWrapper buildUrlQuery(String keyword, Integer status) {
+        QueryWrapper queryWrapper = QueryWrapper.create();
+
+        if (StringUtils.hasText(keyword)) {
+            queryWrapper.where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.ORIGINAL_URL.like(keyword))
+                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.TITLE.like(keyword))
+                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.like(keyword));
+        }
+        if (status != null) {
+            queryWrapper.and(ShortUrlMappingTableDef.SHORT_URL_MAPPING.STATUS.eq(status));
+        }
+        return queryWrapper;
+    }
+
+    private List<ShortUrlMapping> paginate(List<ShortUrlMapping> records, Integer page, Integer size) {
+        if (records == null || records.isEmpty()) {
+            return Collections.emptyList();
+        }
+        int safePage = page == null || page < 1 ? 1 : page;
+        int safeSize = size == null || size < 1 ? 20 : size;
+        int fromIndex = Math.max((safePage - 1) * safeSize, 0);
+        if (fromIndex >= records.size()) {
+            return Collections.emptyList();
+        }
+        int toIndex = Math.min(fromIndex + safeSize, records.size());
+        return records.subList(fromIndex, toIndex);
+    }
+
+    private Long getTodayClicks(String shortKey) {
+        return accessLogDao.selectCountByQuery(
+                QueryWrapper.create()
+                        .where(UrlAccessLogTableDef.URL_ACCESS_LOG.SHORT_KEY.eq(shortKey))
+                        .and(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME.ge(LocalDate.now().atStartOfDay()))
+        );
+    }
+
+    private LocalDateTime getLastAccessTime(String shortKey) {
+        List<com.example.shorturl.model.entity.UrlAccessLog> logs = accessLogDao.selectListByQuery(
+                QueryWrapper.create()
+                        .where(UrlAccessLogTableDef.URL_ACCESS_LOG.SHORT_KEY.eq(shortKey))
+                        .orderBy(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME, false)
+        );
+        return logs.isEmpty() ? null : logs.get(0).getAccessTime();
+    }
+
+    private List<DailyClickPoint> getTrend(String shortKey, int days) {
+        int safeDays = Math.max(days, 1);
+        LocalDate start = LocalDate.now().minusDays(safeDays - 1L);
+        Map<LocalDate, Long> trendMap = new LinkedHashMap<>();
+        for (int i = 0; i < safeDays; i++) {
+            trendMap.put(start.plusDays(i), 0L);
+        }
+
+        List<com.example.shorturl.model.entity.UrlAccessLog> logs = accessLogDao.selectListByQuery(
+                QueryWrapper.create()
+                        .where(UrlAccessLogTableDef.URL_ACCESS_LOG.SHORT_KEY.eq(shortKey))
+                        .and(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME.ge(start.atStartOfDay()))
+        );
+        for (com.example.shorturl.model.entity.UrlAccessLog log : logs) {
+            LocalDate accessDate = log.getAccessTime().toLocalDate();
+            if (trendMap.containsKey(accessDate)) {
+                trendMap.put(accessDate, trendMap.get(accessDate) + 1);
+            }
+        }
+
+        List<DailyClickPoint> trend = new ArrayList<>();
+        for (Map.Entry<LocalDate, Long> entry : trendMap.entrySet()) {
+            DailyClickPoint point = new DailyClickPoint();
+            point.setDate(entry.getKey().format(DateTimeFormatter.ISO_DATE));
+            point.setClicks(entry.getValue());
+            trend.add(point);
+        }
+        return trend;
+    }
+
+    private List<AccessSourceItem> getAccessSources(String shortKey) {
+        List<com.example.shorturl.model.entity.UrlAccessLog> logs = accessLogDao.selectListByQuery(
+                QueryWrapper.create().where(UrlAccessLogTableDef.URL_ACCESS_LOG.SHORT_KEY.eq(shortKey))
+        );
+        if (logs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<String, Long> sourceMap = new LinkedHashMap<>();
+        for (com.example.shorturl.model.entity.UrlAccessLog log : logs) {
+            String source = log.getBrowserType();
+            sourceMap.put(source, sourceMap.getOrDefault(source, 0L) + 1);
+        }
+
+        return sourceMap.entrySet().stream()
+                .sorted((left, right) -> Long.compare(right.getValue(), left.getValue()))
+                .map(entry -> {
+                    AccessSourceItem item = new AccessSourceItem();
+                    item.setSource(entry.getKey());
+                    item.setCount(entry.getValue());
+                    return item;
+                })
+                .toList();
+    }
+
+    private void asyncUpdateAccessStats(String shortKey) {
+        try {
+            asyncLogService.updateClickCount(shortKey);
+        } catch (Exception e) {
+            log.error("异步更新访问统计失败: key={}, error={}", shortKey, e.getMessage());
+        }
+    }
+
+    private String generateUniqueShortKey() {
+        for (int attempts = 0; attempts < 10; attempts++) {
+            String shortKey = ShortUrlGenerator.generateShortKey();
+            Boolean success = redisTemplate.opsForValue().setIfAbsent(
+                    "short_url_key:" + shortKey, "1", 24, TimeUnit.HOURS
+            );
+            if (Boolean.TRUE.equals(success)) {
+                return shortKey;
+            }
+
+            ShortUrlMapping existing = urlMappingDao.selectOneByQuery(
+                    QueryWrapper.create().where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.eq(shortKey))
+            );
+            if (existing == null) {
+                return shortKey;
+            }
+        }
+
+        throw new BusinessException(ResponseStatus.SYSTEM_ERROR.getCode(), "无法生成唯一的短链接，请稍后重试");
+    }
+
     @Setter
     @Getter
     public static class UrlStats {
-        // getters and setters
         private String shortKey;
         private String originalUrl;
         private String title;
         private Long totalClicks;
         private Long todayClicks;
         private LocalDateTime createdTime;
+        private LocalDateTime lastAccessTime;
         private Integer status;
+        private List<DailyClickPoint> trend;
+        private List<AccessSourceItem> accessSources;
+    }
 
+    @Setter
+    @Getter
+    public static class DailyClickPoint {
+        private String date;
+        private Long clicks;
+    }
+
+    @Setter
+    @Getter
+    public static class AccessSourceItem {
+        private String source;
+        private Long count;
     }
 }

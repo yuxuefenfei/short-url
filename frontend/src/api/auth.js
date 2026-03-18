@@ -1,96 +1,49 @@
-/**
- * 认证相关API接口
- */
-
 import request from '@/utils/request'
 
-/**
- * 用户登录
- * @param {Object} data - 登录信息
- * @param {string} data.username - 用户名
- * @param {string} data.password - 密码
- * @returns {Promise} 登录结果
- */
-export const login = (data) => {
-  return request({
+export const login = (data) =>
+  request({
     url: '/api/auth/login',
     method: 'post',
     data
   })
-}
 
-/**
- * 用户注册
- * @param {Object} data - 注册信息
- * @param {string} data.username - 用户名
- * @param {string} data.password - 密码
- * @param {string} data.email - 邮箱（可选）
- * @returns {Promise} 注册结果
- */
-export const register = (data) => {
-  return request({
+export const register = (data) =>
+  request({
     url: '/api/auth/register',
     method: 'post',
     data
   })
-}
 
-/**
- * 刷新Token
- * @param {string} refreshToken - 刷新Token
- * @returns {Promise} 新的Token
- */
-export const refreshToken = (refreshToken) => {
-  return request({
+export const refreshToken = (token) =>
+  request({
     url: '/api/auth/refresh-token',
     method: 'post',
     headers: {
-      'Refresh-Token': refreshToken
+      'Refresh-Token': token
     }
   })
-}
 
-/**
- * 用户登出
- * @param {string} token - 用户Token
- * @returns {Promise} 登出结果
- */
-export const logout = (token) => {
-  return request({
+export const logout = () =>
+  request({
     url: '/api/auth/logout',
-    method: 'post',
-    headers: {
-      'Authorization': token
-    }
+    method: 'post'
   })
-}
 
-/**
- * 验证Token有效性
- * @param {string} token - 用户Token
- * @returns {Promise} 验证结果
- */
-export const validateToken = (token) => {
-  return request({
+export const validateToken = () =>
+  request({
     url: '/api/auth/validate-token',
-    method: 'get',
-    headers: {
-      'Authorization': token
-    }
+    method: 'get'
   })
-}
 
-/**
- * 获取当前用户信息
- * @param {string} token - 用户Token
- * @returns {Promise} 用户信息
- */
-export const getCurrentUser = (token) => {
-  return request({
+export const getCurrentUser = () =>
+  request({
     url: '/api/auth/current-user',
-    method: 'get',
-    headers: {
-      'Authorization': token
-    }
+    method: 'get'
   })
-}
+
+export const checkUsernameExists = (username) =>
+  request({
+    url: '/api/auth/check-username',
+    method: 'get',
+    params: { username }
+  })

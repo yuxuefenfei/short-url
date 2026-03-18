@@ -125,9 +125,7 @@ const handleLogin = async () => {
       username: loginForm.username.trim(),
       password: loginForm.password
     })
-    debugger
-
-    const { token, refreshToken, userInfo } = response
+    const { token, refreshToken, userInfo } = response.data
 
     // 保存用户信息到store
     userStore.login({

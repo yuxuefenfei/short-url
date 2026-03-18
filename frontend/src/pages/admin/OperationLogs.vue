@@ -1,89 +1,88 @@
 <template>
   <div class="operation-logs">
-    <!-- 页面标题 -->
     <div class="page-header">
       <h1 class="page-title">操作日志</h1>
-      <p class="page-subtitle">查看系统操作记录和安全审计</p>
+      <p class="page-subtitle">查看系统操作记录与审计信息</p>
     </div>
 
-    <!-- 搜索和过滤 -->
     <a-card class="filter-card">
       <a-row :gutter="[16, 16]">
-        <a-col :xs="24" :sm="6" :md="4">
+        <a-col :xs="24" :sm="8" :md="5">
           <a-input-search
             v-model:value="searchKeyword"
-            placeholder="搜索用户或操作"
+            placeholder="搜索用户、描述或 IP"
             enter-button="搜索"
-            @search="handleSearch"
             allow-clear
+            @search="handleSearch"
           />
         </a-col>
-        <a-col :xs="12" :sm="6" :md="4">
+        <a-col :xs="12" :sm="8" :md="4">
           <a-select
             v-model:value="moduleFilter"
             placeholder="模块筛选"
             style="width: 100%"
-            @change="handleFilter"
             allow-clear
+            @change="handleFilter"
           >
             <a-select-option value="USER_MANAGEMENT">用户管理</a-select-option>
-            <a-select-option value="URL_MANAGEMENT">短网址管理</a-select-option>
-            <a-select-option value="SYSTEM_CONFIG">系统配置</a-select-option>
-            <a-select-option value="LOGIN_LOGOUT">登录登出</a-select-option>
+            <a-select-option value="URL_MANAGEMENT">短链管理</a-select-option>
+            <a-select-option value="SYSTEM_MONITOR">系统监控</a-select-option>
+            <a-select-option value="AUTH">认证授权</a-select-option>
           </a-select>
         </a-col>
-        <a-col :xs="12" :sm="6" :md="4">
+        <a-col :xs="12" :sm="8" :md="4">
           <a-select
             v-model:value="operationFilter"
             placeholder="操作类型"
             style="width: 100%"
-            @change="handleFilter"
             allow-clear
+            @change="handleFilter"
           >
             <a-select-option value="CREATE">创建</a-select-option>
             <a-select-option value="UPDATE">更新</a-select-option>
             <a-select-option value="DELETE">删除</a-select-option>
-            <a-select-option value="VIEW">查看</a-select-option>
+            <a-select-option value="QUERY">查询</a-select-option>
             <a-select-option value="LOGIN">登录</a-select-option>
             <a-select-option value="LOGOUT">登出</a-select-option>
           </a-select>
         </a-col>
-        <a-col :xs="12" :sm="6" :md="4">
+        <a-col :xs="12" :sm="8" :md="3">
           <a-select
             v-model:value="statusFilter"
-            placeholder="状态筛选"
+            placeholder="状态"
             style="width: 100%"
-            @change="handleFilter"
             allow-clear
+            @change="handleFilter"
           >
-            <a-select-option value="1">成功</a-select-option>
-            <a-select-option value="0">失败</a-select-option>
+            <a-select-option :value="1">成功</a-select-option>
+            <a-select-option :value="0">失败</a-select-option>
           </a-select>
         </a-col>
-        <a-col :xs="12" :sm="6" :md="4">
+        <a-col :xs="24" :sm="16" :md="5">
           <a-range-picker
             v-model:value="dateRange"
             style="width: 100%"
+            :show-time="true"
             @change="handleDateFilter"
-            :placeholder="['开始日期', '结束日期']"
           />
         </a-col>
-        <a-col :xs="24" :sm="6" :md="10" class="action-buttons">
-          <a-button @click="handleExport" style="margin-left: 8px;">
-            <ExportOutlined />
-            导出日志
-          </a-button>
-          <a-button @click="handleRefresh" style="margin-left: 8px;">
-            <ReloadOutlined />
-            刷新
-          </a-button>
+        <a-col :xs="24" :sm="24" :md="3" class="action-buttons">
+          <a-space>
+            <a-button @click="handleExport">
+              <ExportOutlined />
+              导出
+            </a-button>
+            <a-button @click="handleRefresh">
+              <ReloadOutlined />
+              刷新
+            </a-button>
+          </a-space>
         </a-col>
       </a-row>
     </a-card>
 
-    <!-- 统计卡片 -->
     <a-row :gutter="[16, 16]" class="stats-row">
-      <a-col :xs="24" :sm="6" :md="3">
+      <a-col :xs="24" :sm="12" :md="4">
         <a-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon total-ops">
@@ -96,7 +95,7 @@
           </div>
         </a-card>
       </a-col>
-      <a-col :xs="24" :sm="6" :md="3">
+      <a-col :xs="24" :sm="12" :md="4">
         <a-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon success-ops">
@@ -109,7 +108,7 @@
           </div>
         </a-card>
       </a-col>
-      <a-col :xs="24" :sm="6" :md="3">
+      <a-col :xs="24" :sm="12" :md="4">
         <a-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon failed-ops">
@@ -122,7 +121,7 @@
           </div>
         </a-card>
       </a-col>
-      <a-col :xs="24" :sm="6" :md="3">
+      <a-col :xs="24" :sm="12" :md="4">
         <a-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon active-users">
@@ -135,7 +134,7 @@
           </div>
         </a-card>
       </a-col>
-      <a-col :xs="24" :sm="12" :md="6">
+      <a-col :xs="24" :sm="12" :md="4">
         <a-card class="stat-card">
           <div class="stat-content">
             <div class="stat-icon today-ops">
@@ -150,67 +149,53 @@
       </a-col>
     </a-row>
 
-    <!-- 数据表格 -->
     <a-card class="table-card">
       <a-table
         :columns="columns"
         :data-source="logList"
         :loading="loading"
         :pagination="pagination"
-        @change="handleTableChange"
         :scroll="{ x: 1400 }"
-        :row-key="record => record.id"
+        :row-key="(record) => record.id"
+        @change="handleTableChange"
       >
-        <!-- 用户名列 -->
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'username'">
             <div class="user-cell">
-              <a-avatar :style="{ backgroundColor: getAvatarColor(record.username) }" size="small">
-                {{ record.username.charAt(0).toUpperCase() }}
+              <a-avatar :style="{ backgroundColor: getAvatarColor(record.username || '?') }" size="small">
+                {{ (record.username || '?').charAt(0).toUpperCase() }}
               </a-avatar>
-              <span class="username">{{ record.username }}</span>
+              <span class="username">{{ record.username || `用户#${record.userId || '-'}` }}</span>
             </div>
           </template>
 
-          <!-- 操作类型列 -->
           <template v-else-if="column.key === 'operationType'">
             <a-tag :color="getOperationTypeColor(record.operationType)">
               {{ getOperationTypeLabel(record.operationType) }}
             </a-tag>
           </template>
 
-          <!-- 操作模块列 -->
           <template v-else-if="column.key === 'module'">
             <a-tag :color="getModuleColor(record.module)">
               {{ getModuleLabel(record.module) }}
             </a-tag>
           </template>
 
-          <!-- 操作描述列 -->
-          <template v-else-if="column.key === 'operationDesc'">
-            <div class="operation-desc" :title="record.operationDesc">
-              {{ record.operationDesc }}
-            </div>
-          </template>
-
-          <!-- 状态列 -->
           <template v-else-if="column.key === 'status'">
             <a-tag :color="record.status === 1 ? 'success' : 'error'">
               {{ record.status === 1 ? '成功' : '失败' }}
             </a-tag>
           </template>
 
-          <!-- IP地址列 -->
           <template v-else-if="column.key === 'ipAddress'">
             <div class="ip-cell">
-              <span class="ip">{{ record.ipAddress }}</span>
-              <a-tooltip v-if="record.ipAddress" :title="'地理位置: ' + getIpLocation(record.ipAddress)" placement="top">
+              <span class="ip">{{ record.ipAddress || '-' }}</span>
+              <a-tooltip v-if="record.ipAddress" :title="`地区标签：${getIpLocation(record.ipAddress)}`">
                 <EnvironmentOutlined class="location-icon" />
               </a-tooltip>
             </div>
           </template>
 
-          <!-- 操作时间列 -->
           <template v-else-if="column.key === 'operationTime'">
             <div class="time-cell">
               <div>{{ formatDateTime(record.operationTime) }}</div>
@@ -218,91 +203,62 @@
             </div>
           </template>
 
-          <!-- 操作列 -->
           <template v-else-if="column.key === 'action'">
-            <div class="action-cell">
-              <a-space>
-                <a @click="viewDetails(record)">详情</a>
-                <a-divider type="vertical" />
-                <a @click="viewUserLogs(record)">用户日志</a>
-              </a-space>
-            </div>
+            <a-space>
+              <a @click="viewDetails(record)">详情</a>
+              <a-divider type="vertical" />
+              <a @click="viewUserLogs(record)">用户日志</a>
+            </a-space>
           </template>
         </template>
       </a-table>
     </a-card>
 
-    <!-- 日志详情模态框 -->
     <a-modal
-      v-model:visible="showDetailModal"
+      v-model:open="showDetailModal"
       title="操作日志详情"
       :footer="null"
-      width="700px"
+      width="720px"
     >
       <div v-if="selectedLog" class="detail-content">
         <a-descriptions bordered :column="1">
-          <a-descriptions-item label="日志ID">
-            {{ selectedLog.id }}
-          </a-descriptions-item>
-          <a-descriptions-item label="用户ID">
-            {{ selectedLog.userId }}
-          </a-descriptions-item>
-          <a-descriptions-item label="用户名">
-            {{ selectedLog.username }}
-          </a-descriptions-item>
+          <a-descriptions-item label="日志 ID">{{ selectedLog.id }}</a-descriptions-item>
+          <a-descriptions-item label="用户 ID">{{ selectedLog.userId || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="用户名">{{ selectedLog.username || '-' }}</a-descriptions-item>
           <a-descriptions-item label="操作类型">
             <a-tag :color="getOperationTypeColor(selectedLog.operationType)">
               {{ getOperationTypeLabel(selectedLog.operationType) }}
             </a-tag>
           </a-descriptions-item>
-          <a-descriptions-item label="操作模块">
+          <a-descriptions-item label="模块">
             <a-tag :color="getModuleColor(selectedLog.module)">
               {{ getModuleLabel(selectedLog.module) }}
             </a-tag>
           </a-descriptions-item>
-          <a-descriptions-item label="操作描述">
-            {{ selectedLog.operationDesc }}
+          <a-descriptions-item label="操作描述">{{ selectedLog.operationDesc || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="IP 地址">
+            {{ selectedLog.ipAddress || '-' }} ({{ getIpLocation(selectedLog.ipAddress) }})
           </a-descriptions-item>
-          <a-descriptions-item label="IP地址">
-            <div class="ip-detail">
-              {{ selectedLog.ipAddress }}
-              <span class="location">({{ getIpLocation(selectedLog.ipAddress) }})</span>
-            </div>
+          <a-descriptions-item label="User Agent">
+            <div class="detail-block">{{ selectedLog.userAgent || '-' }}</div>
           </a-descriptions-item>
-          <a-descriptions-item label="用户代理">
-            <div class="user-agent">
-              {{ selectedLog.userAgent || '未记录' }}
-            </div>
-          </a-descriptions-item>
-          <a-descriptions-item label="请求路径">
-            {{ selectedLog.requestPath || '未记录' }}
-          </a-descriptions-item>
-          <a-descriptions-item label="请求方法">
-            {{ selectedLog.requestMethod || '未记录' }}
-          </a-descriptions-item>
+          <a-descriptions-item label="请求路径">{{ selectedLog.requestPath || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="请求方法">{{ selectedLog.requestMethod || '-' }}</a-descriptions-item>
           <a-descriptions-item label="请求参数">
-            <div class="request-params">
-              {{ selectedLog.requestParams || '无' }}
-            </div>
+            <div class="detail-block">{{ selectedLog.requestParams || '-' }}</div>
           </a-descriptions-item>
           <a-descriptions-item label="响应结果">
-            <div class="response-result">
-              {{ selectedLog.responseResult || '无' }}
-            </div>
+            <div class="detail-block">{{ selectedLog.responseResult || '-' }}</div>
           </a-descriptions-item>
-          <a-descriptions-item label="操作状态">
+          <a-descriptions-item label="状态">
             <a-tag :color="selectedLog.status === 1 ? 'success' : 'error'">
               {{ selectedLog.status === 1 ? '成功' : '失败' }}
             </a-tag>
           </a-descriptions-item>
-          <a-descriptions-item label="错误信息" v-if="selectedLog.errorMessage">
-            <div class="error-message">
-              {{ selectedLog.errorMessage }}
-            </div>
+          <a-descriptions-item v-if="selectedLog.errorMessage" label="错误信息">
+            <div class="detail-block error-message">{{ selectedLog.errorMessage }}</div>
           </a-descriptions-item>
-          <a-descriptions-item label="操作时间">
-            {{ formatDateTime(selectedLog.operationTime) }}
-          </a-descriptions-item>
+          <a-descriptions-item label="操作时间">{{ formatDateTime(selectedLog.operationTime) }}</a-descriptions-item>
         </a-descriptions>
       </div>
     </a-modal>
@@ -310,28 +266,26 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { message } from 'ant-design-vue'
 import {
-  FileTextOutlined,
   CheckCircleOutlined,
-  CloseCircleOutlined,
-  UserOutlined,
   ClockCircleOutlined,
+  CloseCircleOutlined,
+  EnvironmentOutlined,
   ExportOutlined,
+  FileTextOutlined,
   ReloadOutlined,
-  EnvironmentOutlined
+  UserOutlined
 } from '@ant-design/icons-vue'
 import { getOperationLogs, getOperationLogStats } from '@/api/admin'
 
-// 搜索和过滤
 const searchKeyword = ref('')
 const moduleFilter = ref(undefined)
 const operationFilter = ref(undefined)
 const statusFilter = ref(undefined)
 const dateRange = ref([])
 
-// 统计数据
 const stats = reactive({
   totalOperations: 0,
   successOperations: 0,
@@ -340,7 +294,6 @@ const stats = reactive({
   todayOperations: 0
 })
 
-// 表格数据
 const logList = ref([])
 const loading = ref(false)
 const pagination = reactive({
@@ -349,262 +302,158 @@ const pagination = reactive({
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`
+  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
 })
 
-// 表格列定义
-const columns = [
-  {
-    title: '用户',
-    dataIndex: 'username',
-    key: 'username',
-    width: 120
-  },
-  {
-    title: '操作类型',
-    dataIndex: 'operationType',
-    key: 'operationType',
-    width: 100
-  },
-  {
-    title: '模块',
-    dataIndex: 'module',
-    key: 'module',
-    width: 120
-  },
-  {
-    title: '操作描述',
-    dataIndex: 'operationDesc',
-    key: 'operationDesc',
-    ellipsis: true,
-    width: 200
-  },
-  {
-    title: 'IP地址',
-    dataIndex: 'ipAddress',
-    key: 'ipAddress',
-    width: 140
-  },
-  {
-    title: '状态',
-    dataIndex: 'status',
-    key: 'status',
-    width: 80
-  },
-  {
-    title: '操作时间',
-    dataIndex: 'operationTime',
-    key: 'operationTime',
-    width: 180,
-    sorter: true
-  },
-  {
-    title: '操作',
-    key: 'action',
-    width: 150,
-    fixed: 'right'
-  }
-]
-
-// 详情模态框
 const showDetailModal = ref(false)
 const selectedLog = ref(null)
 
-/**
- * 生成头像颜色
- */
+const columns = [
+  { title: '用户', dataIndex: 'username', key: 'username', width: 140 },
+  { title: '操作类型', dataIndex: 'operationType', key: 'operationType', width: 110 },
+  { title: '模块', dataIndex: 'module', key: 'module', width: 130 },
+  { title: '操作描述', dataIndex: 'operationDesc', key: 'operationDesc', ellipsis: true, width: 220 },
+  { title: 'IP 地址', dataIndex: 'ipAddress', key: 'ipAddress', width: 160 },
+  { title: '状态', dataIndex: 'status', key: 'status', width: 90 },
+  { title: '操作时间', dataIndex: 'operationTime', key: 'operationTime', width: 190 },
+  { title: '操作', key: 'action', width: 140, fixed: 'right' }
+]
+
 const getAvatarColor = (username) => {
   const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#7cb305', '#1890ff']
   const index = username.charCodeAt(0) % colors.length
   return colors[index]
 }
 
-/**
- * 获取操作类型颜色
- */
 const getOperationTypeColor = (type) => {
   const colorMap = {
-    'CREATE': 'green',
-    'UPDATE': 'blue',
-    'DELETE': 'red',
-    'VIEW': 'cyan',
-    'LOGIN': 'purple',
-    'LOGOUT': 'orange'
+    CREATE: 'green',
+    UPDATE: 'blue',
+    DELETE: 'red',
+    QUERY: 'cyan',
+    VIEW: 'cyan',
+    LOGIN: 'purple',
+    LOGOUT: 'orange'
   }
   return colorMap[type] || 'default'
 }
 
-/**
- * 获取操作类型标签
- */
 const getOperationTypeLabel = (type) => {
   const labelMap = {
-    'CREATE': '创建',
-    'UPDATE': '更新',
-    'DELETE': '删除',
-    'VIEW': '查看',
-    'LOGIN': '登录',
-    'LOGOUT': '登出'
+    CREATE: '创建',
+    UPDATE: '更新',
+    DELETE: '删除',
+    QUERY: '查询',
+    VIEW: '查看',
+    LOGIN: '登录',
+    LOGOUT: '登出'
   }
-  return labelMap[type] || type
+  return labelMap[type] || type || '-'
 }
 
-/**
- * 获取模块颜色
- */
 const getModuleColor = (module) => {
   const colorMap = {
-    'USER_MANAGEMENT': 'blue',
-    'URL_MANAGEMENT': 'green',
-    'SYSTEM_CONFIG': 'purple',
-    'LOGIN_LOGOUT': 'orange'
+    USER_MANAGEMENT: 'blue',
+    URL_MANAGEMENT: 'green',
+    SYSTEM_MONITOR: 'purple',
+    SYSTEM_CONFIG: 'purple',
+    LOGIN_LOGOUT: 'orange',
+    AUTH: 'gold'
   }
   return colorMap[module] || 'default'
 }
 
-/**
- * 获取模块标签
- */
 const getModuleLabel = (module) => {
   const labelMap = {
-    'USER_MANAGEMENT': '用户管理',
-    'URL_MANAGEMENT': '短网址管理',
-    'SYSTEM_CONFIG': '系统配置',
-    'LOGIN_LOGOUT': '登录登出'
+    USER_MANAGEMENT: '用户管理',
+    URL_MANAGEMENT: '短链管理',
+    SYSTEM_MONITOR: '系统监控',
+    SYSTEM_CONFIG: '系统配置',
+    LOGIN_LOGOUT: '登录登出',
+    AUTH: '认证授权'
   }
-  return labelMap[module] || module
+  return labelMap[module] || module || '-'
 }
 
-/**
- * 获取IP地理位置（模拟）
- */
 const getIpLocation = (ip) => {
   if (!ip) return '未知'
-  // 模拟IP地理位置查询
-  const locations = ['北京市', '上海市', '广州市', '深圳市', '杭州市', '南京市']
-  const index = ip.split('.').reduce((sum, part) => sum + parseInt(part), 0) % locations.length
-  return locations[index]
+  const tags = ['华北', '华东', '华南', '西南', '西北', '东北']
+  const score = ip
+    .split('.')
+    .map((part) => Number(part) || 0)
+    .reduce((sum, value) => sum + value, 0)
+  return tags[score % tags.length]
 }
 
-/**
- * 加载统计数据
- */
+const buildParams = () => {
+  const params = {
+    page: pagination.current,
+    size: pagination.pageSize,
+    keyword: searchKeyword.value || undefined,
+    module: moduleFilter.value,
+    operationType: operationFilter.value,
+    status: statusFilter.value
+  }
+
+  if (dateRange.value?.length === 2) {
+    params.startDate = dateRange.value[0]?.toISOString?.()
+    params.endDate = dateRange.value[1]?.toISOString?.()
+  }
+
+  return params
+}
+
 const loadStats = async () => {
   try {
     const response = await getOperationLogStats()
     if (response.code === 200) {
-      Object.assign(stats, response.data)
+      Object.assign(stats, response.data || {})
     }
   } catch (error) {
-    console.error('加载统计数据失败:', error)
-    // 使用模拟数据
-    stats.totalOperations = 1250
-    stats.successOperations = 1180
-    stats.failedOperations = 70
-    stats.activeUsers = 45
-    stats.todayOperations = 89
+    console.error('Failed to load log stats:', error)
+    message.error('加载日志统计失败')
   }
 }
 
-/**
- * 加载日志列表
- */
 const loadLogList = async () => {
   loading.value = true
   try {
-    const params = {
-      page: pagination.current,
-      size: pagination.pageSize,
-      keyword: searchKeyword.value,
-      module: moduleFilter.value,
-      operationType: operationFilter.value,
-      status: statusFilter.value
-    }
-
-    if (dateRange.value && dateRange.value.length === 2) {
-      params.startDate = dateRange.value[0]
-      params.endDate = dateRange.value[1]
-    }
-
-    const response = await getOperationLogs(params)
+    const response = await getOperationLogs(buildParams())
     if (response.code === 200) {
-      logList.value = response.data.list
-      pagination.total = response.data.total
+      logList.value = response.data?.list || []
+      pagination.total = response.data?.total || 0
     }
   } catch (error) {
-    console.error('加载日志列表失败:', error)
-    // 使用模拟数据
-    logList.value = generateMockLogs()
-    pagination.total = logList.value.length
+    console.error('Failed to load log list:', error)
+    logList.value = []
+    pagination.total = 0
+    message.error('加载日志列表失败')
   } finally {
     loading.value = false
   }
 }
 
-/**
- * 生成模拟日志数据
- */
-const generateMockLogs = () => {
-  const operations = ['CREATE', 'UPDATE', 'DELETE', 'VIEW', 'LOGIN', 'LOGOUT']
-  const modules = ['USER_MANAGEMENT', 'URL_MANAGEMENT', 'SYSTEM_CONFIG', 'LOGIN_LOGOUT']
-  const users = ['admin', 'user1', 'user2', 'testuser']
-  const logs = []
-
-  for (let i = 1; i <= 50; i++) {
-    const operationTime = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000)
-    logs.push({
-      id: i,
-      userId: Math.floor(Math.random() * 100) + 1,
-      username: users[Math.floor(Math.random() * users.length)],
-      operationType: operations[Math.floor(Math.random() * operations.length)],
-      module: modules[Math.floor(Math.random() * modules.length)],
-      operationDesc: `执行${getOperationTypeLabel(operations[Math.floor(Math.random() * operations.length)])}操作`,
-      ipAddress: `192.168.1.${Math.floor(Math.random() * 255)}`,
-      status: Math.random() > 0.1 ? 1 : 0,
-      operationTime: operationTime,
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    })
-  }
-
-  return logs.sort((a, b) => new Date(b.operationTime) - new Date(a.operationTime))
-}
-
-/**
- * 处理搜索
- */
 const handleSearch = () => {
   pagination.current = 1
   loadLogList()
 }
 
-/**
- * 处理筛选
- */
 const handleFilter = () => {
   pagination.current = 1
   loadLogList()
 }
 
-/**
- * 处理日期筛选
- */
 const handleDateFilter = () => {
   pagination.current = 1
   loadLogList()
 }
 
-/**
- * 处理表格变化
- */
-const handleTableChange = (pag, filters, sorter) => {
+const handleTableChange = (pag) => {
   pagination.current = pag.current
   pagination.pageSize = pag.pageSize
   loadLogList()
 }
 
-/**
- * 处理刷新
- */
 const handleRefresh = () => {
   searchKeyword.value = ''
   moduleFilter.value = undefined
@@ -612,86 +461,44 @@ const handleRefresh = () => {
   statusFilter.value = undefined
   dateRange.value = []
   pagination.current = 1
+  loadStats()
   loadLogList()
 }
 
-/**
- * 查看详情
- */
 const viewDetails = (record) => {
   selectedLog.value = record
   showDetailModal.value = true
 }
 
-/**
- * 查看用户日志
- */
 const viewUserLogs = (record) => {
-  searchKeyword.value = record.username
+  searchKeyword.value = record.username || ''
   pagination.current = 1
   loadLogList()
 }
 
-/**
- * 导出日志
- */
 const handleExport = async () => {
   try {
-    message.loading('正在导出日志...', 0)
-
-    // 构建导出参数
     const params = {
-      keyword: searchKeyword.value,
-      module: moduleFilter.value,
-      operationType: operationFilter.value,
-      status: statusFilter.value,
-      exportAll: true // 标记为导出全部数据
+      ...buildParams(),
+      page: 1,
+      size: Math.max(pagination.total || 100, 100)
     }
-
-    if (dateRange.value && dateRange.value.length === 2) {
-      params.startDate = dateRange.value[0]
-      params.endDate = dateRange.value[1]
-    }
-
-    // 调用导出API
     const response = await getOperationLogs(params)
-
-    if (response.code === 200 && response.data.list) {
+    if (response.code === 200 && response.data?.list?.length) {
       exportLogsToCSV(response.data.list, '操作日志')
       message.success('日志导出成功')
-    } else {
-      message.error('导出失败：未获取到数据')
+      return
     }
+    message.warning('没有可导出的日志数据')
   } catch (error) {
-    console.error('导出日志失败:', error)
+    console.error('Failed to export logs:', error)
     message.error('导出失败，请稍后重试')
   }
 }
 
-/**
- * 导出日志数据为CSV
- */
 const exportLogsToCSV = (data, filename) => {
-  if (!data || data.length === 0) {
-    message.warning('没有数据可导出')
-    return
-  }
-
-  // CSV表头
-  const headers = [
-    '日志ID',
-    '用户ID',
-    '用户名',
-    '操作类型',
-    '操作模块',
-    '操作描述',
-    'IP地址',
-    '操作状态',
-    '操作时间'
-  ]
-
-  // 数据转换
-  const csvData = data.map(item => [
+  const headers = ['日志ID', '用户ID', '用户名', '操作类型', '操作模块', '操作描述', 'IP地址', '状态', '操作时间']
+  const csvRows = data.map((item) => [
     item.id || '',
     item.userId || '',
     item.username || '',
@@ -703,58 +510,36 @@ const exportLogsToCSV = (data, filename) => {
     formatDateTime(item.operationTime)
   ])
 
-  // 构建CSV内容
-  const csvContent = [
-    headers.join(','),
-    ...csvData.map(row => row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(','))
-  ].join('\n')
-
-  // 添加BOM以支持中文
-  const BOM = '\uFEFF'
-  const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
-
-  // 创建下载链接
-  const link = document.createElement('a')
+  const content = [headers.join(','), ...csvRows.map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(','))].join('\n')
+  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
-  link.setAttribute('href', url)
-  link.setAttribute('download', `${filename}_${new Date().toISOString().slice(0, 10)}.csv`)
-  link.style.visibility = 'hidden'
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
-
-  // 清理URL对象
   URL.revokeObjectURL(url)
 }
 
-/**
- * 格式化日期时间
- */
 const formatDateTime = (dateTime) => {
-  if (!dateTime) return ''
+  if (!dateTime) return '-'
   return new Date(dateTime).toLocaleString()
 }
 
-/**
- * 格式化相对时间
- */
 const formatTimeAgo = (dateTime) => {
-  if (!dateTime) return ''
-  const now = new Date()
-  const diff = now - new Date(dateTime)
+  if (!dateTime) return '-'
+  const diff = Date.now() - new Date(dateTime).getTime()
   const minutes = Math.floor(diff / 60000)
   const hours = Math.floor(minutes / 60)
   const days = Math.floor(hours / 24)
 
-  if (days > 0) return `${days}天前`
-  if (hours > 0) return `${hours}小时前`
-  if (minutes > 0) return `${minutes}分钟前`
+  if (days > 0) return `${days} 天前`
+  if (hours > 0) return `${hours} 小时前`
+  if (minutes > 0) return `${minutes} 分钟前`
   return '刚刚'
 }
 
-/**
- * 生命周期钩子
- */
 onMounted(() => {
   loadStats()
   loadLogList()
@@ -771,7 +556,7 @@ onMounted(() => {
 }
 
 .page-title {
-  margin: 0 0 8px 0;
+  margin: 0 0 8px;
   font-size: 28px;
   font-weight: 600;
   color: #262626;
@@ -783,7 +568,114 @@ onMounted(() => {
   font-size: 16px;
 }
 
+.filter-card,
+.table-card,
+.stat-card {
+  border-radius: 8px;
+}
+
 .filter-card {
   margin-bottom: 24px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.stats-row {
+  margin-bottom: 24px;
+}
+
+.stat-content {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+}
+
+.total-ops {
+  background: linear-gradient(135deg, #1677ff, #69b1ff);
+}
+
+.success-ops {
+  background: linear-gradient(135deg, #52c41a, #95de64);
+}
+
+.failed-ops {
+  background: linear-gradient(135deg, #ff4d4f, #ff7875);
+}
+
+.active-users {
+  background: linear-gradient(135deg, #722ed1, #b37feb);
+}
+
+.today-ops {
+  background: linear-gradient(135deg, #fa8c16, #ffc069);
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #262626;
+}
+
+.stat-label {
+  margin-top: 4px;
+  color: #8c8c8c;
+  font-size: 13px;
+}
+
+.user-cell,
+.ip-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.username {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.location-icon {
+  color: #1677ff;
+}
+
+.time-cell {
+  line-height: 1.4;
+}
+
+.time-ago {
+  color: #8c8c8c;
+  font-size: 12px;
+}
+
+.detail-block {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.error-message {
+  color: #ff4d4f;
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    justify-content: flex-start;
+  }
 }
 </style>

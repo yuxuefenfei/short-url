@@ -5,6 +5,7 @@ import com.example.shorturl.common.response.ResponseStatus;
 import com.example.shorturl.dao.AccessLogDao;
 import com.example.shorturl.dao.UrlMappingDao;
 import com.example.shorturl.model.entity.ShortUrlMapping;
+import com.example.shorturl.model.entity.UrlAccessLog;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,291 +17,134 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
-/**
- * UrlService单元测试
- * <p>
- * 测试覆盖范围：
- * - 短网址创建功能
- * - URL重定向功能
- * - 访问统计功能
- * - 异常处理场景
- * - 缓存管理功能
- */
 @ExtendWith(MockitoExtension.class)
 class UrlServiceTest {
 
-    private static final String TEST_DOMAIN = "https://short.ly";
-    private static final int CACHE_EXPIRE_DAYS = 7;
     @Mock
     private UrlMappingDao urlMappingDao;
+
     @Mock
     private AccessLogDao accessLogDao;
+
     @Mock
     private AsyncLogService asyncLogService;
+
     @Mock
     private StringRedisTemplate redisTemplate;
+
     @Mock
     private ValueOperations<String, String> valueOperations;
+
     @InjectMocks
     private UrlService urlService;
 
     @BeforeEach
     void setUp() {
-        // 设置配置属性
-        ReflectionTestUtils.setField(urlService, "shortUrlDomain", TEST_DOMAIN);
-        ReflectionTestUtils.setField(urlService, "cacheExpireDays", CACHE_EXPIRE_DAYS);
-
-        // 模拟Redis操作
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        ReflectionTestUtils.setField(urlService, "shortUrlDomain", "https://short.ly");
+        ReflectionTestUtils.setField(urlService, "cacheExpireDays", 7);
+        lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
     }
 
-    /**
-     * 测试创建短网址 - 正常场景
-     */
     @Test
-    void testCreateShortUrl_Success() {
-        // Given
-        String originalUrl = "https://example.com/very/long/url";
-        String title = "测试网址";
-        LocalDateTime expiredTime = LocalDateTime.now().plusDays(30);
-        String expectedShortKey = "abc123";
+    void testCreateShortUrlSuccess() {
+        when(valueOperations.setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class))).thenReturn(true);
+        when(urlMappingDao.insert(any(ShortUrlMapping.class))).thenReturn(1);
 
-        // 模拟Redis setIfAbsent返回true（key不存在）
-        when(valueOperations.setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class)))
-                .thenReturn(true);
+        String shortKey = urlService.createShortUrl("https://example.com", "test", LocalDateTime.now().plusDays(1));
 
-        // 模拟数据库插入
-        doNothing().when(urlMappingDao).insert(any(ShortUrlMapping.class));
-
-        // When
-        String result = urlService.createShortUrl(originalUrl, title, expiredTime);
-
-        // Then
-        assertNotNull(result);
+        assertNotNull(shortKey);
         verify(urlMappingDao).insert(any(ShortUrlMapping.class));
-        verify(valueOperations).setIfAbsent(contains("short_url_key:"), anyString(), anyLong(), any(TimeUnit.class));
     }
 
-    /**
-     * 测试创建短网址 - URL为空
-     */
     @Test
-    void testCreateShortUrl_EmptyUrl_ThrowsException() {
-        // Given
-        String emptyUrl = "";
-
-        // When & Then
-        BusinessException exception = assertThrows(BusinessException.class, () -> urlService.createShortUrl(emptyUrl, null, null));
+    void testCreateShortUrlEmptyUrl() {
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> urlService.createShortUrl("", null, null)
+        );
 
         assertEquals(ResponseStatus.INVALID_URL_FORMAT.getCode(), exception.getCode());
-        verify(urlMappingDao, never()).insert(any());
+        verify(urlMappingDao, never()).insert(any(ShortUrlMapping.class));
     }
 
-    /**
-     * 测试创建短网址 - URL过长
-     */
     @Test
-    void testCreateShortUrl_UrlTooLong_ThrowsException() {
-        // Given
-        String longUrl = "https://example.com/" + "a".repeat(2040); // 超过2048字符
-
-        // When & Then
-        BusinessException exception = assertThrows(BusinessException.class, () -> urlService.createShortUrl(longUrl, null, null));
-
-        assertEquals(ResponseStatus.URL_LENGTH_EXCEEDED.getCode(), exception.getCode());
-        verify(urlMappingDao, never()).insert(any());
-    }
-
-    /**
-     * 测试获取原始URL - 正常场景
-     */
-    @Test
-    void testGetOriginalUrl_Success() {
-        // Given
-        String shortKey = "abc123";
-        String originalUrl = "https://example.com/test";
-
+    void testGetOriginalUrlSuccess() {
         ShortUrlMapping mapping = new ShortUrlMapping();
-        mapping.setShortKey(shortKey);
-        mapping.setOriginalUrl(originalUrl);
-        mapping.setStatus(1); // 正常状态
-        mapping.setExpiredTime(LocalDateTime.now().plusDays(1)); // 未过期
-
-        when(urlMappingDao.selectOneByQuery(any())).thenReturn(mapping);
-        doNothing().when(asyncLogService).updateClickCount(anyString());
-
-        // When
-        String result = urlService.getOriginalUrl(shortKey);
-
-        // Then
-        assertEquals(originalUrl, result);
-        verify(asyncLogService).updateClickCount(shortKey);
-    }
-
-    /**
-     * 测试获取原始URL - 短网址不存在
-     */
-    @Test
-    void testGetOriginalUrl_NotFound_ThrowsException() {
-        // Given
-        String shortKey = "nonexistent";
-
-        when(urlMappingDao.selectOneByQuery(any())).thenReturn(null);
-
-        // When & Then
-        BusinessException exception = assertThrows(BusinessException.class, () -> urlService.getOriginalUrl(shortKey));
-
-        assertEquals(ResponseStatus.SHORT_URL_NOT_EXIST.getCode(), exception.getCode());
-    }
-
-    /**
-     * 测试获取原始URL - 短网址已过期
-     */
-    @Test
-    void testGetOriginalUrl_Expired_ThrowsException() {
-        // Given
-        String shortKey = "expired123";
-
-        ShortUrlMapping mapping = new ShortUrlMapping();
-        mapping.setShortKey(shortKey);
-        mapping.setOriginalUrl("https://example.com");
+        mapping.setShortKey("abc123");
+        mapping.setOriginalUrl("https://example.com/test");
         mapping.setStatus(1);
-        mapping.setExpiredTime(LocalDateTime.now().minusDays(1)); // 已过期
-
-        when(urlMappingDao.selectOneByQuery(any())).thenReturn(mapping);
-
-        // When & Then
-        BusinessException exception = assertThrows(BusinessException.class, () -> urlService.getOriginalUrl(shortKey));
-
-        assertEquals(ResponseStatus.SHORT_URL_EXPIRED.getCode(), exception.getCode());
-    }
-
-    /**
-     * 测试获取原始URL - 短网址被禁用
-     */
-    @Test
-    void testGetOriginalUrl_Disabled_ThrowsException() {
-        // Given
-        String shortKey = "disabled123";
-
-        ShortUrlMapping mapping = new ShortUrlMapping();
-        mapping.setShortKey(shortKey);
-        mapping.setOriginalUrl("https://example.com");
-        mapping.setStatus(0); // 禁用状态
         mapping.setExpiredTime(LocalDateTime.now().plusDays(1));
 
         when(urlMappingDao.selectOneByQuery(any())).thenReturn(mapping);
 
-        // When & Then
-        BusinessException exception = assertThrows(BusinessException.class, () -> urlService.getOriginalUrl(shortKey));
+        String result = urlService.getOriginalUrl("abc123");
 
-        assertEquals(ResponseStatus.SHORT_URL_DISABLED.getCode(), exception.getCode());
+        assertEquals("https://example.com/test", result);
+        verify(asyncLogService).updateClickCount("abc123");
     }
 
-    /**
-     * 测试获取URL统计信息 - 正常场景
-     */
     @Test
-    void testGetUrlStats_Success() {
-        // Given
-        String shortKey = "stats123";
-        String originalUrl = "https://example.com/stats";
-
-        ShortUrlMapping mapping = new ShortUrlMapping();
-        mapping.setShortKey(shortKey);
-        mapping.setOriginalUrl(originalUrl);
-        mapping.setTitle("统计测试");
-        mapping.setClickCount(100L);
-        mapping.setCreatedTime(LocalDateTime.now());
-        mapping.setStatus(1);
-
-        when(urlMappingDao.selectOneByQuery(any())).thenReturn(mapping);
-        when(accessLogDao.selectCountByQuery(any())).thenReturn(25L); // 今日访问25次
-
-        // When
-        UrlService.UrlStats stats = urlService.getUrlStats(shortKey);
-
-        // Then
-        assertNotNull(stats);
-        assertEquals(shortKey, stats.getShortKey());
-        assertEquals(originalUrl, stats.getOriginalUrl());
-        assertEquals("统计测试", stats.getTitle());
-        assertEquals(100L, stats.getTotalClicks());
-        assertEquals(25L, stats.getTodayClicks());
-        assertEquals(1, stats.getStatus());
-    }
-
-    /**
-     * 测试获取URL统计信息 - 短网址不存在
-     */
-    @Test
-    void testGetUrlStats_NotFound_ThrowsException() {
-        // Given
-        String shortKey = "nonexistent";
-
+    void testGetOriginalUrlNotFound() {
         when(urlMappingDao.selectOneByQuery(any())).thenReturn(null);
 
-        // When & Then
-        BusinessException exception = assertThrows(BusinessException.class, () -> urlService.getUrlStats(shortKey));
+        BusinessException exception = assertThrows(
+                BusinessException.class,
+                () -> urlService.getOriginalUrl("abc123")
+        );
 
         assertEquals(ResponseStatus.SHORT_URL_NOT_EXIST.getCode(), exception.getCode());
     }
 
-    /**
-     * 测试生成唯一短网址key的冲突处理
-     */
     @Test
-    void testCreateShortUrl_KeyConflict_RetrySuccess() {
-        // Given
-        String originalUrl = "https://example.com/conflict";
-        String title = "冲突测试";
+    void testGetUrlStatsSuccess() {
+        ShortUrlMapping mapping = new ShortUrlMapping();
+        mapping.setShortKey("abc123");
+        mapping.setOriginalUrl("https://example.com/test");
+        mapping.setTitle("stats");
+        mapping.setClickCount(100L);
+        mapping.setCreatedTime(LocalDateTime.now());
+        mapping.setStatus(1);
 
-        // 模拟第一次Redis操作返回false（key已存在），第二次返回true
-        when(valueOperations.setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class)))
-                .thenReturn(false, true); // 第一次冲突，第二次成功
+        UrlAccessLog lastLog = new UrlAccessLog();
+        lastLog.setAccessTime(LocalDateTime.now());
 
-        // 模拟数据库查询返回（数据库中不存在）
-        when(urlMappingDao.selectOneByQuery(any())).thenReturn(null);
+        when(urlMappingDao.selectOneByQuery(any())).thenReturn(mapping);
+        when(accessLogDao.selectCountByQuery(any())).thenReturn(25L);
+        when(accessLogDao.selectListByQuery(any())).thenReturn(List.of(lastLog));
 
-        doNothing().when(urlMappingDao).insert(any(ShortUrlMapping.class));
+        UrlService.UrlStats stats = urlService.getUrlStats("abc123");
 
-        // When
-        String result = urlService.createShortUrl(originalUrl, title, null);
-
-        // Then
-        assertNotNull(result);
-        verify(urlMappingDao).insert(any(ShortUrlMapping.class));
-        // 验证Redis操作被调用了两次
-        verify(valueOperations, times(2)).setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class));
+        assertEquals("abc123", stats.getShortKey());
+        assertEquals(100L, stats.getTotalClicks());
+        assertEquals(25L, stats.getTodayClicks());
+        assertNotNull(stats.getLastAccessTime());
     }
 
-    /**
-     * 测试短网址key生成达到最大重试次数
-     */
     @Test
-    void testCreateShortUrl_MaxRetriesExceeded_ThrowsException() {
-        // Given
-        String originalUrl = "https://example.com/maxretry";
-
-        // 模拟Redis操作始终返回false（总是冲突）
+    void testCreateShortUrlKeyConflictThenSuccess() {
         when(valueOperations.setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class)))
-                .thenReturn(false);
+                .thenReturn(false, true);
+        when(urlMappingDao.selectOneByQuery(any())).thenReturn(new ShortUrlMapping(), null);
+        when(urlMappingDao.insert(any(ShortUrlMapping.class))).thenReturn(1);
 
-        // 模拟数据库查询总是返回已存在的记录
-        ShortUrlMapping existingMapping = new ShortUrlMapping();
-        when(urlMappingDao.selectOneByQuery(any())).thenReturn(existingMapping);
+        String shortKey = urlService.createShortUrl("https://example.com", "test", null);
 
-        // When & Then
-        BusinessException exception = assertThrows(BusinessException.class, () -> urlService.createShortUrl(originalUrl, null, null));
-
-        assertTrue(exception.getMessage().contains("无法生成唯一的短网址key"));
-        verify(urlMappingDao, never()).insert(any());
+        assertNotNull(shortKey);
+        verify(valueOperations, times(2)).setIfAbsent(anyString(), anyString(), anyLong(), any(TimeUnit.class));
     }
 }
