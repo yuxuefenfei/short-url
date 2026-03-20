@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS "short_url_mapping" (
   "status" TINYINT NOT NULL DEFAULT 1,
   "created_time" TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   "expired_time" TIMESTAMP,
+  "updated_time" TIMESTAMP,
   PRIMARY KEY ("id"),
   UNIQUE ("short_key")
 );

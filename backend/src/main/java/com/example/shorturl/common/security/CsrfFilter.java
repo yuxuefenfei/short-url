@@ -52,7 +52,8 @@ public class CsrfFilter extends OncePerRequestFilter {
     // 排除检查的路径
     private static final String[] EXCLUDED_PATHS = {
             "/health", "/metrics", "/actuator", "/static", "/assets",
-            "/api/auth/login", "/api/auth/register", "/api/url/redirect"
+            "/api/auth/login", "/api/auth/register", "/api/url/redirect",
+            "/api/shorten"
     };
     // 从请求中获取Token的位置
     private static final String CSRF_HEADER_NAME = "X-CSRF-TOKEN";
@@ -82,6 +83,12 @@ public class CsrfFilter extends OncePerRequestFilter {
                 if ("GET".equals(method)) {
                     generateAndSetToken(request, response);
                 }
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // 无状态API（Bearer Token鉴权）不需要CSRF保护
+            if (shouldSkipCsrfForStatelessApi(request)) {
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -124,6 +131,14 @@ public class CsrfFilter extends OncePerRequestFilter {
             }
         }
         return false;
+    }
+
+    /**
+     * 判断是否应跳过无状态API的CSRF检查
+     */
+    private boolean shouldSkipCsrfForStatelessApi(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        return authHeader != null && authHeader.startsWith("Bearer ");
     }
 
     /**

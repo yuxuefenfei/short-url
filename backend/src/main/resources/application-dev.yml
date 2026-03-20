@@ -30,9 +30,9 @@ spring:
   # Redis配置（开发环境）
   data:
     redis:
-      host: localhost
-      port: 6380
-      password: RcsTRtCzV8qmj3y$Mk*E
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASS}
       database: 0
 
 # 开发环境特殊配置
