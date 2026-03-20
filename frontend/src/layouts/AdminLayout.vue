@@ -473,9 +473,14 @@ watch(() => route.path, () => {
   flex: 1;
   background: #f0f2f5;
   overflow: auto;
+  display: flex;
+  justify-content: center;
 }
 
 .content-wrapper {
+  width: 100%;
+  max-width: 1520px;
+  margin: 0 auto;
   padding: 24px;
   min-height: calc(100vh - 112px); /* 减去header和footer的高度 */
 }
@@ -515,6 +520,7 @@ watch(() => route.path, () => {
 @media (max-width: 768px) {
   .content-wrapper {
     padding: 16px;
+    max-width: 100%;
   }
 
   .user-name {
