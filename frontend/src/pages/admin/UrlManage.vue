@@ -1,10 +1,9 @@
 <template>
   <div class="url-manage">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <h1 class="page-title">短网址管理</h1>
-      <p class="page-subtitle">管理和监控所有短网址</p>
-    </div>
+    <AdminPageHeader
+      title="短网址管理"
+      subtitle="管理和监控所有短网址"
+    />
 
     <!-- 搜索和过滤 -->
     <a-card class="filter-card">
@@ -235,6 +234,7 @@ import {
 import { getUrlList, updateUrlStatus, deleteUrl as deleteUrlApi } from '@/api/admin'
 import { shortenUrl } from '@/api/url'
 import { urlRules, titleRules, handleFormError } from '@/utils/validators'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 
 const router = useRouter()
 
@@ -633,23 +633,7 @@ const formatTimeAgo = (dateTime) => {
 <style scoped>
 .url-manage {
   min-height: 100%;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 600;
-  color: #262626;
-}
-
-.page-subtitle {
-  margin: 0;
-  color: #8c8c8c;
-  font-size: 16px;
+  padding: 4px;
 }
 
 .filter-card {
@@ -744,6 +728,10 @@ const formatTimeAgo = (dateTime) => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .url-manage {
+    padding: 0;
+  }
+
   .action-buttons {
     margin-top: 16px;
     justify-content: flex-start;

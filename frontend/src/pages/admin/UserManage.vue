@@ -1,10 +1,9 @@
 <template>
   <div class="user-manage">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <h1 class="page-title">用户管理</h1>
-      <p class="page-subtitle">管理系统用户和权限</p>
-    </div>
+    <AdminPageHeader
+      title="用户管理"
+      subtitle="管理系统用户和权限"
+    />
 
     <!-- 搜索和过滤 -->
     <a-card class="filter-card">
@@ -268,6 +267,7 @@ import {
 } from '@ant-design/icons-vue'
 import { getUserList, createUser, updateUserInfo, updateUserStatus, deleteUser as deleteUserApi, resetUserPassword } from '@/api/admin'
 import { checkUsernameExists } from '@/api/auth'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 
 // 搜索和过滤
 const searchKeyword = ref('')
@@ -761,23 +761,7 @@ onMounted(() => {
 <style scoped>
 .user-manage {
   min-height: 100%;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  margin: 0 0 8px 0;
-  font-size: 28px;
-  font-weight: 600;
-  color: #262626;
-}
-
-.page-subtitle {
-  margin: 0;
-  color: #8c8c8c;
-  font-size: 16px;
+  padding: 4px;
 }
 
 .filter-card {
@@ -834,6 +818,10 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 768px) {
+  .user-manage {
+    padding: 0;
+  }
+
   .action-buttons {
     margin-top: 16px;
     justify-content: flex-start;

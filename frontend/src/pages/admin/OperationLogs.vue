@@ -1,9 +1,9 @@
 <template>
   <div class="operation-logs">
-    <div class="page-header">
-      <h1 class="page-title">操作日志</h1>
-      <p class="page-subtitle">查看系统操作记录与审计信息</p>
-    </div>
+    <AdminPageHeader
+      title="操作日志"
+      subtitle="查看系统操作记录与审计信息"
+    />
 
     <a-card class="filter-card">
       <a-row :gutter="[16, 16]">
@@ -279,6 +279,7 @@ import {
   UserOutlined
 } from '@ant-design/icons-vue'
 import { getOperationLogs, getOperationLogStats } from '@/api/admin'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 
 const searchKeyword = ref('')
 const moduleFilter = ref(undefined)
@@ -549,23 +550,7 @@ onMounted(() => {
 <style scoped>
 .operation-logs {
   min-height: 100%;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  margin: 0 0 8px;
-  font-size: 28px;
-  font-weight: 600;
-  color: #262626;
-}
-
-.page-subtitle {
-  margin: 0;
-  color: #8c8c8c;
-  font-size: 16px;
+  padding: 4px;
 }
 
 .filter-card,
@@ -674,6 +659,10 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
+  .operation-logs {
+    padding: 0;
+  }
+
   .action-buttons {
     justify-content: flex-start;
   }

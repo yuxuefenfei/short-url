@@ -1,9 +1,9 @@
 <template>
   <div class="dashboard">
-    <div class="page-header">
-      <h1 class="page-title">数据看板</h1>
-      <p class="page-subtitle">查看系统概览、访问趋势和实时运行状态</p>
-    </div>
+    <AdminPageHeader
+      title="数据看板"
+      subtitle="查看系统概览、访问趋势和实时运行状态"
+    />
 
     <a-row :gutter="[16, 16]" class="stats-row">
       <a-col :xs="24" :sm="12" :md="6">
@@ -221,6 +221,7 @@ import {
 } from '@ant-design/icons-vue'
 import echarts from '@/utils/echarts'
 import { getDashboardOverview, getSystemStats } from '@/api/admin'
+import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
 
 const router = useRouter()
 
@@ -460,23 +461,7 @@ onUnmounted(() => {
 <style scoped>
 .dashboard {
   min-height: 100%;
-}
-
-.page-header {
-  margin-bottom: 24px;
-}
-
-.page-title {
-  margin: 0 0 8px;
-  font-size: 28px;
-  font-weight: 600;
-  color: #262626;
-}
-
-.page-subtitle {
-  margin: 0;
-  color: #8c8c8c;
-  font-size: 16px;
+  padding: 4px;
 }
 
 .stats-row {
@@ -752,6 +737,10 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  .dashboard {
+    padding: 0;
+  }
+
   .stat-content {
     flex-direction: column;
     text-align: center;
