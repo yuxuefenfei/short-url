@@ -513,8 +513,13 @@ const deleteUrl = (record) => {
  * 导出数据
  */
 const handleExport = async () => {
+  const exportMessageKey = 'url-export'
   try {
-    message.loading('正在导出数据...', 0)
+    message.loading({
+      content: '正在导出数据...',
+      key: exportMessageKey,
+      duration: 0
+    })
 
     // 构建导出参数
     const params = {
@@ -533,13 +538,22 @@ const handleExport = async () => {
 
     if (response.code === 200 && response.data.list) {
       exportToCSV(response.data.list, '短网址数据')
-      message.success('数据导出成功')
+      message.success({
+        content: '数据导出成功',
+        key: exportMessageKey
+      })
     } else {
-      message.error('导出失败：未获取到数据')
+      message.error({
+        content: '导出失败：未获取到数据',
+        key: exportMessageKey
+      })
     }
   } catch (error) {
     console.error('导出数据失败:', error)
-    message.error('导出失败，请稍后重试')
+    message.error({
+      content: '导出失败，请稍后重试',
+      key: exportMessageKey
+    })
   }
 }
 
