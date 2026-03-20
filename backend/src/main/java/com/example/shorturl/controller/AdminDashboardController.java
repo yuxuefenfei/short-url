@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.lang.management.ManagementFactory;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.nio.file.FileStore;
 import java.nio.file.FileSystems;
 import java.time.LocalDate;
@@ -40,6 +42,9 @@ public class AdminDashboardController {
 
     @Value("${short-url.domain:https://short.ly}")
     private String shortUrlDomain;
+
+    @Value("${server.port:8080}")
+    private int serverPort;
 
     @RequiresLog(type = "QUERY", module = "SYSTEM_MONITOR", description = "查询管理后台概览")
     @GetMapping("/overview")
@@ -129,15 +134,10 @@ public class AdminDashboardController {
     private SystemMetrics buildSystemMetrics() {
         SystemMetrics metrics = new SystemMetrics();
 
-        long maxMemory = Runtime.getRuntime().maxMemory();
-        long totalMemory = Runtime.getRuntime().totalMemory();
-        long freeMemory = Runtime.getRuntime().freeMemory();
-        long usedMemory = totalMemory - freeMemory;
-
-        metrics.setMemoryUsage(maxMemory <= 0 ? 0 : (int) Math.min(100, usedMemory * 100 / maxMemory));
+        metrics.setMemoryUsage(readMemoryUsage());
         metrics.setCpuUsage(readCpuUsage());
         metrics.setDiskUsage(readDiskUsage());
-        metrics.setNetworkLatency(10);
+        metrics.setNetworkLatency(readNetworkLatency());
         return metrics;
     }
 
@@ -147,23 +147,86 @@ public class AdminDashboardController {
             if (bean instanceof com.sun.management.OperatingSystemMXBean osBean) {
                 double load = osBean.getCpuLoad();
                 if (load >= 0) {
-                    return (int) Math.round(load * 100);
+                    return clampPercent((int) Math.round(load * 100));
                 }
+
+                load = osBean.getProcessCpuLoad();
+                if (load >= 0) {
+                    return clampPercent((int) Math.round(load * 100));
+                }
+            }
+
+            // Fallback: 使用系统负载均值估算CPU使用率
+            double loadAverage = bean.getSystemLoadAverage();
+            int processors = Runtime.getRuntime().availableProcessors();
+            if (loadAverage >= 0 && processors > 0) {
+                return clampPercent((int) Math.round((loadAverage / processors) * 100));
             }
         } catch (Exception ignored) {
         }
         return 0;
     }
 
+    private int readMemoryUsage() {
+        try {
+            java.lang.management.OperatingSystemMXBean bean = ManagementFactory.getOperatingSystemMXBean();
+            if (bean instanceof com.sun.management.OperatingSystemMXBean osBean) {
+                long totalPhysical = osBean.getTotalMemorySize();
+                long freePhysical = osBean.getFreeMemorySize();
+                if (totalPhysical > 0 && freePhysical >= 0 && freePhysical <= totalPhysical) {
+                    long usedPhysical = totalPhysical - freePhysical;
+                    return clampPercent((int) Math.round((double) usedPhysical * 100 / totalPhysical));
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        long maxMemory = Runtime.getRuntime().maxMemory();
+        long totalMemory = Runtime.getRuntime().totalMemory();
+        long freeMemory = Runtime.getRuntime().freeMemory();
+        long usedMemory = totalMemory - freeMemory;
+        return maxMemory <= 0 ? 0 : clampPercent((int) Math.round((double) usedMemory * 100 / maxMemory));
+    }
+
     private int readDiskUsage() {
         try {
-            FileStore store = FileSystems.getDefault().getFileStores().iterator().next();
-            long total = store.getTotalSpace();
-            long used = total - store.getUsableSpace();
-            return total <= 0 ? 0 : (int) Math.min(100, used * 100 / total);
+            int maxUsage = 0;
+            for (FileStore store : FileSystems.getDefault().getFileStores()) {
+                try {
+                    if (store.isReadOnly()) {
+                        continue;
+                    }
+                    long total = store.getTotalSpace();
+                    if (total <= 0) {
+                        continue;
+                    }
+                    long used = total - store.getUsableSpace();
+                    int usage = clampPercent((int) Math.round((double) used * 100 / total));
+                    if (usage > maxUsage) {
+                        maxUsage = usage;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+            return maxUsage;
         } catch (Exception ignored) {
             return 0;
         }
+    }
+
+    private int readNetworkLatency() {
+        long start = System.nanoTime();
+        try (Socket socket = new Socket()) {
+            socket.connect(new InetSocketAddress("127.0.0.1", serverPort), 1000);
+            long end = System.nanoTime();
+            return (int) Math.max(1, Math.round((end - start) / 1_000_000.0));
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
+    private int clampPercent(int value) {
+        return Math.max(0, Math.min(100, value));
     }
 
     @Data

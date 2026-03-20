@@ -157,6 +157,7 @@
                   :percent="systemMetrics.cpuUsage"
                   size="small"
                   :status="getProgressStatus(systemMetrics.cpuUsage)"
+                  :format="formatPercent"
                 />
               </div>
             </div>
@@ -167,6 +168,7 @@
                   :percent="systemMetrics.memoryUsage"
                   size="small"
                   :status="getProgressStatus(systemMetrics.memoryUsage)"
+                  :format="formatPercent"
                 />
               </div>
             </div>
@@ -177,6 +179,7 @@
                   :percent="systemMetrics.diskUsage"
                   size="small"
                   :status="getProgressStatus(systemMetrics.diskUsage)"
+                  :format="formatPercent"
                 />
               </div>
             </div>
@@ -370,6 +373,8 @@ const getProgressStatus = (value) => {
   if (value >= 60) return 'active'
   return 'normal'
 }
+
+const formatPercent = (percent) => `${Math.max(0, Math.min(100, Number(percent) || 0))}%`
 
 const getLatencyStatus = (latency) => {
   if (latency < 50) return 'good'

@@ -21,7 +21,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.lang.management.ManagementFactory;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Slf4j
@@ -114,7 +116,10 @@ public class AdminController {
         stats.setTotalClicks(urlService.getTotalClicks());
         stats.setTodayNewUrls(urlService.getTodayNewUrls());
         stats.setTodayClicks(urlService.getTodayClicks());
-        stats.setSystemStartTime(LocalDateTime.now().minusDays(30));
+        stats.setSystemStartTime(LocalDateTime.ofInstant(
+                java.time.Instant.ofEpochMilli(ManagementFactory.getRuntimeMXBean().getStartTime()),
+                ZoneId.systemDefault()
+        ));
         stats.setVersion("1.1.0");
         return ApiResponse.success(stats);
     }
