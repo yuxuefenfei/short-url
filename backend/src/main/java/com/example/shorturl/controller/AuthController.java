@@ -124,7 +124,7 @@ public class AuthController {
         log.info("用户登出请求");
 
         try {
-            authService.logout(null);
+            authService.logout(token);
             return ApiResponse.success();
         } catch (Exception e) {
             log.error("用户登出失败: error={}", e.getMessage());

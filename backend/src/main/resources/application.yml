@@ -89,6 +89,11 @@ short-url:
   key-length: 6
   cache-expire-days: 7
 
+# 管理端监控配置
+admin:
+  online-user:
+    ttl-seconds: 1800
+
 # 服务器配置
 server:
   port: 8080

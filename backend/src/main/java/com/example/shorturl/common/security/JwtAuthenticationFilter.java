@@ -1,6 +1,7 @@
 package com.example.shorturl.common.security;
 
 import com.example.shorturl.service.UserDetailsServiceImpl;
+import com.example.shorturl.service.OnlineUserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -48,6 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
 
+    @Autowired
+    private OnlineUserService onlineUserService;
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
@@ -60,6 +64,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String jwt = extractJwtFromRequest(request);
 
             if (jwt != null && jwtUtils.validateToken(jwt)) {
+                Long userId = jwtUtils.extractUserId(jwt);
+                onlineUserService.markUserOnline(userId);
+
                 // 从Token中提取用户名
                 String username = jwtUtils.extractUsername(jwt);
 

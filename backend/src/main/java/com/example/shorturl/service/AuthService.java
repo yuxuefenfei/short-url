@@ -41,6 +41,9 @@ public class AuthService {
     @Autowired
     private JwtUtils jwtUtils;
 
+    @Autowired
+    private OnlineUserService onlineUserService;
+
     /**
      * 用户登录
      */
@@ -142,8 +145,11 @@ public class AuthService {
      * 用户登出
      */
     @Transactional
-    public void logout(Long userId) {
+    public void logout(String authorizationHeader) {
+        Long userId = extractUserIdFromAuthorizationHeader(authorizationHeader);
         log.info("用户登出: userId={}", userId);
+
+        onlineUserService.markUserOffline(userId);
 
         // TODO: 可以实现Token黑名单机制
         // 将Token添加到Redis黑名单，防止继续使用
@@ -151,6 +157,24 @@ public class AuthService {
 
         // 当前实现：前端清除Token即可
         log.info("用户登出成功: userId={}", userId);
+    }
+
+    private Long extractUserIdFromAuthorizationHeader(String authorizationHeader) {
+        if (authorizationHeader == null || authorizationHeader.isBlank()) {
+            return null;
+        }
+
+        String token = authorizationHeader;
+        if (authorizationHeader.startsWith("Bearer ")) {
+            token = authorizationHeader.substring(7);
+        }
+
+        try {
+            return jwtUtils.extractUserId(token);
+        } catch (Exception e) {
+            log.warn("解析登出用户ID失败: {}", e.getMessage());
+            return null;
+        }
     }
 
     /**

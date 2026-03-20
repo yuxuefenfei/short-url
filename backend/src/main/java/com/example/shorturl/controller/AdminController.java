@@ -6,6 +6,7 @@ import com.example.shorturl.common.response.PageResult;
 import com.example.shorturl.model.entity.User;
 import com.example.shorturl.service.UrlService;
 import com.example.shorturl.service.UserService;
+import com.example.shorturl.service.OnlineUserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -36,6 +37,9 @@ public class AdminController {
 
     @Autowired
     private UrlService urlService;
+
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     @RequiresLog(type = "QUERY", module = "USER_MANAGEMENT", description = "查询用户列表")
     @GetMapping("/users")
@@ -111,7 +115,7 @@ public class AdminController {
     public ApiResponse<SystemStats> getSystemStats() {
         SystemStats stats = new SystemStats();
         stats.setTotalUsers(userService.getUserCount(null, null, null));
-        stats.setOnlineUsers(0L);
+        stats.setOnlineUsers(onlineUserService.countOnlineUsers());
         stats.setTotalUrls(urlService.getUrlCount(null, null));
         stats.setTotalClicks(urlService.getTotalClicks());
         stats.setTodayNewUrls(urlService.getTodayNewUrls());
