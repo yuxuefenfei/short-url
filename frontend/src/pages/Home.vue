@@ -164,8 +164,8 @@
               >
                 <div class="item-content">
                   <div class="item-url">
-                    <a :href="getFullShortUrl(item.shortKey)" target="_blank">
-                      {{ getFullShortUrl(item.shortKey) }}
+                    <a :href="item.shortUrl || '#'" target="_blank">
+                      {{ item.shortUrl || item.shortKey }}
                     </a>
                   </div>
                   <div class="item-original" :title="item.originalUrl">
@@ -179,7 +179,7 @@
                   <a-button type="link" size="small" @click="viewStats(item.shortKey)">
                     统计
                   </a-button>
-                  <a-button type="link" size="small" @click="copyToClipboard(getFullShortUrl(item.shortKey))">
+                  <a-button type="link" size="small" @click="copyToClipboard(item.shortUrl || item.shortKey)">
                     复制
                   </a-button>
                 </div>
@@ -284,13 +284,14 @@ const handleSubmit = async () => {
     const payload = response.data
     result.value = {
       ...payload,
-      shortUrl: payload.shortUrl || getFullShortUrl(payload.shortKey),
+      shortUrl: payload.shortUrl,
       createdTime: new Date().toISOString()
     }
 
     // 添加到最近使用列表
     urlStore.addRecentUrl({
       shortKey: payload.shortKey,
+      shortUrl: payload.shortUrl,
       originalUrl: form.originalUrl,
       title: form.title,
       createdTime: result.value.createdTime
@@ -326,10 +327,6 @@ const viewStats = (shortKey) => {
 
 const openShortUrl = (url) => {
   window.open(url, '_blank')
-}
-
-const getFullShortUrl = (shortKey) => {
-  return urlStore.getFullShortUrl(shortKey)
 }
 
 const clearRecentUrls = () => {

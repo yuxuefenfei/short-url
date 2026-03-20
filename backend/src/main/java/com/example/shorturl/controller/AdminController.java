@@ -120,7 +120,7 @@ public class AdminController {
                 java.time.Instant.ofEpochMilli(ManagementFactory.getRuntimeMXBean().getStartTime()),
                 ZoneId.systemDefault()
         ));
-        stats.setVersion("1.1.0");
+        stats.setVersion("1.0.0");
         return ApiResponse.success(stats);
     }
 

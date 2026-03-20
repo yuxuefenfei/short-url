@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Short URL API
-  version: 1.1.0
+  version: 1.0.0
   description: |
     统一返回结构为 ApiResponse<T>。
     成功业务码固定为 200，分页数据统一使用 PageResult 结构。

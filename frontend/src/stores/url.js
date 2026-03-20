@@ -109,12 +109,6 @@ export const useUrlStore = defineStore('url', () => {
         localStorage.setItem('recentUrls', JSON.stringify(updatedUrls))
     }
 
-    // 获取短网址的完整URL
-    const getFullShortUrl = (shortKey) => {
-        const domain = import.meta.env.VITE_SHORT_URL_DOMAIN || 'https://short.ly'
-        return `${domain}/${shortKey}`
-    }
-
     // 搜索最近使用的短网址
     const searchRecentUrls = (query) => {
         if (!query) return recentUrls.value
@@ -194,7 +188,6 @@ export const useUrlStore = defineStore('url', () => {
         clearError,
         isStatsStale,
         addMultipleUrls,
-        getFullShortUrl,
         searchRecentUrls,
         exportUrlData,
         importUrlData

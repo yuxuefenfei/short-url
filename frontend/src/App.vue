@@ -32,8 +32,7 @@ provide('urlStore', urlStore)
 const appConfig = computed(() => ({
   version: '1.0.0',
   name: '短网址管理系统',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '/api',
-  shortUrlDomain: import.meta.env.VITE_SHORT_URL_DOMAIN || 'https://short.ly'
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '/api'
 }))
 
 provide('appConfig', appConfig)
@@ -86,3 +85,4 @@ provide('handleError', handleError)
   }
 }
 </style>
+

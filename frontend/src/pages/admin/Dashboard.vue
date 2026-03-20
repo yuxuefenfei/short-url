@@ -196,7 +196,7 @@
 
           <div class="system-info">
             <a-descriptions size="small" :column="1">
-              <a-descriptions-item label="系统版本">{{ stats.version || 'v1.1.0' }}</a-descriptions-item>
+              <a-descriptions-item label="系统版本">{{ stats.version || 'v1.0.0' }}</a-descriptions-item>
               <a-descriptions-item label="启动时间">{{ formatDateTime(stats.systemStartTime) }}</a-descriptions-item>
               <a-descriptions-item label="运行时长">{{ systemUptime }}</a-descriptions-item>
             </a-descriptions>

@@ -526,9 +526,6 @@ npm run format
 # API基础URL
 VITE_API_BASE_URL=/api
 
-# 短网址域名
-VITE_SHORT_URL_DOMAIN=https://short.ly
-
 # 应用环境
 NODE_ENV=development
 ```

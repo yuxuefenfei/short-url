@@ -86,7 +86,6 @@ jwt:
 
 # 短网址配置
 short-url:
-  domain: https://short.ly
   key-length: 6
   cache-expire-days: 7
 

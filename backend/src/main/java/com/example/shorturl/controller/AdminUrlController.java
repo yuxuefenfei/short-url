@@ -8,6 +8,8 @@ import com.example.shorturl.service.UrlService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,16 +30,24 @@ public class AdminUrlController {
     @Autowired
     private UrlService urlService;
 
+    @Value("${short-url.domain:https://short.ly}")
+    private String shortUrlDomain;
+
     @RequiresLog(type = "QUERY", module = "URL_MANAGEMENT", description = "查询短链列表")
     @GetMapping("/urls")
-    public ApiResponse<PageResult<ShortUrlMapping>> getUrlList(
+    public ApiResponse<PageResult<AdminUrlView>> getUrlList(
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status) {
 
+        var urlList = urlService.getUrlList(page, size, keyword, status)
+                .stream()
+                .map(this::toAdminUrlView)
+                .toList();
+
         return ApiResponse.success(PageResult.of(
-                urlService.getUrlList(page, size, keyword, status),
+                urlList,
                 urlService.getUrlCount(keyword, status),
                 page,
                 size
@@ -99,5 +109,26 @@ public class AdminUrlController {
     public static class UpdateUrlRequest {
         private String title;
         private LocalDateTime expiredTime;
+    }
+
+    @Data
+    public static class AdminUrlView {
+        private Long id;
+        private String shortKey;
+        private String shortUrl;
+        private String originalUrl;
+        private String title;
+        private Long clickCount;
+        private Integer status;
+        private LocalDateTime createdTime;
+        private LocalDateTime expiredTime;
+        private LocalDateTime updatedTime;
+    }
+
+    private AdminUrlView toAdminUrlView(ShortUrlMapping mapping) {
+        AdminUrlView view = new AdminUrlView();
+        BeanUtils.copyProperties(mapping, view);
+        view.setShortUrl(shortUrlDomain + "/" + mapping.getShortKey());
+        return view;
     }
 }

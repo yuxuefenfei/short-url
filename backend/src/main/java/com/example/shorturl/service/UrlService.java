@@ -109,6 +109,7 @@ public class UrlService {
 
         UrlStats stats = new UrlStats();
         stats.setShortKey(shortKey);
+        stats.setShortUrl(shortUrlDomain + "/" + shortKey);
         stats.setOriginalUrl(mapping.getOriginalUrl());
         stats.setTitle(mapping.getTitle());
         stats.setTotalClicks(mapping.getClickCount());
@@ -336,6 +337,7 @@ public class UrlService {
     @Getter
     public static class UrlStats {
         private String shortKey;
+        private String shortUrl;
         private String originalUrl;
         private String title;
         private Long totalClicks;

@@ -114,8 +114,8 @@
                 <a-tag color="blue">{{ stats.shortKey }}</a-tag>
               </a-descriptions-item>
               <a-descriptions-item label="完整短链">
-                <a :href="getFullShortUrl(stats.shortKey)" target="_blank" rel="noreferrer">
-                  {{ getFullShortUrl(stats.shortKey) }}
+                <a :href="stats.shortUrl" target="_blank" rel="noreferrer">
+                  {{ stats.shortUrl }}
                 </a>
               </a-descriptions-item>
               <a-descriptions-item label="原始网址">
@@ -193,7 +193,7 @@
                 <ReloadOutlined />
                 刷新数据
               </a-button>
-              <a-button type="primary" @click="openShortUrl(getFullShortUrl(stats.shortKey))">
+              <a-button type="primary" @click="openShortUrl(stats.shortUrl)">
                 <ExportOutlined />
                 访问短链
               </a-button>
@@ -233,10 +233,8 @@ import {
 } from '@ant-design/icons-vue'
 import { message } from 'ant-design-vue'
 import { getUrlStats } from '@/api/url'
-import { useUrlStore } from '@/stores/url'
 
 const route = useRoute()
-const urlStore = useUrlStore()
 
 const loading = ref(false)
 const stats = ref(null)
@@ -279,7 +277,6 @@ const loadStats = async (shortKey) => {
 
     stats.value = response.data
     accessSources.value = response.data?.accessSources || []
-    urlStore.setUrlStats(shortKey, response.data)
 
     await nextTick()
     renderChart()
@@ -375,7 +372,6 @@ const openShortUrl = (url) => {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-const getFullShortUrl = (shortKey) => urlStore.getFullShortUrl(shortKey)
 
 const formatDate = (dateTime) => {
   if (!dateTime) return '-'
@@ -608,3 +604,4 @@ onUnmounted(() => {
   }
 }
 </style>
+

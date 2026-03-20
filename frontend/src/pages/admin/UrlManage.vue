@@ -567,7 +567,7 @@ const exportToCSV = (data, filename) => {
   // 数据转换
   const csvData = data.map(item => [
     item.shortKey || '',
-    item.shortUrl || `https://short.ly/${item.shortKey}`,
+    item.shortUrl || '',
     item.originalUrl || '',
     item.title || '',
     item.clickCount || 0,
