@@ -1,5 +1,6 @@
 package com.example.shorturl.controller;
 
+import com.example.shorturl.common.redis.RedisKeyConstants;
 import com.example.shorturl.common.response.ApiResponse;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
@@ -223,7 +224,7 @@ public class HealthController {
 
         try {
             // 设置测试key
-            String testKey = "health:test:" + System.currentTimeMillis();
+            String testKey = RedisKeyConstants.HEALTH_TEST_KEY_PREFIX + System.currentTimeMillis();
             String testValue = "test_value";
 
             // 测试set操作

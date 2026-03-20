@@ -1,6 +1,7 @@
 package com.example.shorturl.service;
 
 import com.example.shorturl.common.exception.BusinessException;
+import com.example.shorturl.common.redis.RedisKeyConstants;
 import com.example.shorturl.common.response.ResponseStatus;
 import com.example.shorturl.common.utils.ShortUrlGenerator;
 import com.example.shorturl.dao.AccessLogDao;
@@ -76,7 +77,7 @@ public class UrlService {
         return shortKey;
     }
 
-    @Cacheable(value = "shortUrlMapping", key = "#shortKey", unless = "#result == null")
+    @Cacheable(value = "short_url_mapping", key = "#shortKey", unless = "#result == null")
     public String getOriginalUrl(String shortKey) {
         if (!ShortUrlGenerator.isValidShortKey(shortKey)) {
             throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
@@ -198,7 +199,7 @@ public class UrlService {
 
     public void clearUrlCache(String shortKey) {
         try {
-            redisTemplate.delete("shortUrlMapping::" + shortKey);
+            redisTemplate.delete(RedisKeyConstants.CACHE_PREFIX + "short_url_mapping:" + shortKey);
         } catch (Exception e) {
             log.warn("清理缓存失败: key={}, error={}", shortKey, e.getMessage());
         }
@@ -316,7 +317,7 @@ public class UrlService {
         for (int attempts = 0; attempts < 10; attempts++) {
             String shortKey = ShortUrlGenerator.generateShortKey();
             Boolean success = redisTemplate.opsForValue().setIfAbsent(
-                    "short_url_key:" + shortKey, "1", 24, TimeUnit.HOURS
+                    RedisKeyConstants.SHORT_URL_KEY_LOCK_PREFIX + shortKey, "1", 24, TimeUnit.HOURS
             );
             if (Boolean.TRUE.equals(success)) {
                 return shortKey;

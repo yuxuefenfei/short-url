@@ -1,5 +1,6 @@
 package com.example.shorturl.config;
 
+import com.example.shorturl.common.redis.RedisKeyConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -73,28 +74,29 @@ public class RedisConfig {
                 .entryTtl(Duration.ofHours(1)) // 默认1小时过期
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
+                .computePrefixWith(cacheName -> RedisKeyConstants.CACHE_PREFIX + cacheName + ":")
                 .disableCachingNullValues();
 
         // 自定义缓存配置
         Map<String, RedisCacheConfiguration> cacheConfigurations = new HashMap<>();
 
         // 短网址映射缓存 - 24小时
-        cacheConfigurations.put("shortUrlMapping", defaultConfig.entryTtl(Duration.ofHours(24)));
+        cacheConfigurations.put("short_url_mapping", defaultConfig.entryTtl(Duration.ofHours(24)));
 
         // 用户信息缓存 - 12小时
-        cacheConfigurations.put("userInfo", defaultConfig.entryTtl(Duration.ofHours(12)));
+        cacheConfigurations.put("user_info", defaultConfig.entryTtl(Duration.ofHours(12)));
 
         // 访问统计缓存 - 5分钟
-        cacheConfigurations.put("accessStats", defaultConfig.entryTtl(Duration.ofMinutes(5)));
+        cacheConfigurations.put("access_stats", defaultConfig.entryTtl(Duration.ofMinutes(5)));
 
         // 操作日志缓存 - 30分钟
-        cacheConfigurations.put("operationLogs", defaultConfig.entryTtl(Duration.ofMinutes(30)));
+        cacheConfigurations.put("operation_logs", defaultConfig.entryTtl(Duration.ofMinutes(30)));
 
         // 黑名单缓存 - 永久
         cacheConfigurations.put("blacklist", defaultConfig.entryTtl(Duration.ofDays(365)));
 
         // 限流缓存 - 1小时
-        cacheConfigurations.put("rateLimit", defaultConfig.entryTtl(Duration.ofHours(1)));
+        cacheConfigurations.put("rate_limit", defaultConfig.entryTtl(Duration.ofHours(1)));
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(defaultConfig)

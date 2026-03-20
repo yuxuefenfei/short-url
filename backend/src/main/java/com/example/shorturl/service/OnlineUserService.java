@@ -1,5 +1,6 @@
 package com.example.shorturl.service;
 
+import com.example.shorturl.common.redis.RedisKeyConstants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class OnlineUserService {
 
-    private static final String ONLINE_USER_ZSET_KEY = "online_users";
+    private static final String ONLINE_USER_ZSET_KEY = RedisKeyConstants.ONLINE_USERS_ZSET_KEY;
 
     @Autowired
     private StringRedisTemplate redisTemplate;

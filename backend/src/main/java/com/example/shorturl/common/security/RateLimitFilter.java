@@ -1,5 +1,6 @@
 package com.example.shorturl.common.security;
 
+import com.example.shorturl.common.redis.RedisKeyConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -199,7 +200,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
      */
     private boolean checkRateLimit(String identifier, String apiPath, RateLimitConfig config) {
         try {
-            String key = "rate_limit:" + identifier + ":" + apiPath;
+            String key = RedisKeyConstants.buildRateLimitKey(identifier, apiPath);
             long now = System.currentTimeMillis() / 1000;
 
             // 执行Lua脚本进行限流检查
@@ -243,7 +244,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
      */
     public void clearRateLimit(String identifier, String apiPath) {
         try {
-            String key = "rate_limit:" + identifier + ":" + apiPath;
+            String key = RedisKeyConstants.buildRateLimitKey(identifier, apiPath);
             redisTemplate.delete(key);
             log.info("清除限流记录: identifier={}, path={}", identifier, apiPath);
         } catch (Exception e) {
@@ -257,7 +258,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
      */
     public RateLimitStats getRateLimitStats(String identifier, String apiPath) {
         try {
-            String key = "rate_limit:" + identifier + ":" + apiPath;
+            String key = RedisKeyConstants.buildRateLimitKey(identifier, apiPath);
             Long count = redisTemplate.opsForZSet().size(key);
 
             return new RateLimitStats(

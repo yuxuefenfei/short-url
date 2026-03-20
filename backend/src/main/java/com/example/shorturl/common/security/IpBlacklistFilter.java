@@ -1,5 +1,6 @@
 package com.example.shorturl.common.security;
 
+import com.example.shorturl.common.redis.RedisKeyConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,10 +42,10 @@ import java.util.concurrent.TimeUnit;
 public class IpBlacklistFilter extends OncePerRequestFilter {
 
     // Redis键前缀
-    private static final String BLACKLIST_KEY_PREFIX = "ip_blacklist:";
-    private static final String BLACKLIST_SET_KEY = "ip_blacklist_set";
-    private static final String IP_ATTEMPTS_KEY_PREFIX = "ip_attempts:";
-    private static final String IP_BLOCK_TIME_KEY_PREFIX = "ip_block_time:";
+    private static final String BLACKLIST_KEY_PREFIX = RedisKeyConstants.IP_BLACKLIST_KEY_PREFIX;
+    private static final String BLACKLIST_SET_KEY = RedisKeyConstants.IP_BLACKLIST_SET_KEY;
+    private static final String IP_ATTEMPTS_KEY_PREFIX = RedisKeyConstants.IP_ATTEMPTS_KEY_PREFIX;
+    private static final String IP_BLOCK_TIME_KEY_PREFIX = RedisKeyConstants.IP_BLOCK_TIME_KEY_PREFIX;
     // 封禁配置
     private static final int MAX_FAILED_ATTEMPTS = 10; // 最大失败尝试次数
     private static final int ATTEMPT_WINDOW_MINUTES = 10; // 尝试时间窗口(分钟)

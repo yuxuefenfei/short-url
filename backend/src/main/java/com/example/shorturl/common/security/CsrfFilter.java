@@ -1,5 +1,6 @@
 package com.example.shorturl.common.security;
 
+import com.example.shorturl.common.redis.RedisKeyConstants;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -41,8 +42,8 @@ import java.util.concurrent.TimeUnit;
 public class CsrfFilter extends OncePerRequestFilter {
 
     // Redis键前缀
-    private static final String CSRF_TOKEN_KEY_PREFIX = "csrf_token:";
-    private static final String CSRF_USER_TOKENS_KEY_PREFIX = "csrf_user_tokens:";
+    private static final String CSRF_TOKEN_KEY_PREFIX = RedisKeyConstants.CSRF_TOKEN_KEY_PREFIX;
+    private static final String CSRF_USER_TOKENS_KEY_PREFIX = RedisKeyConstants.CSRF_USER_TOKENS_KEY_PREFIX;
     // Token配置
     private static final int TOKEN_LENGTH = 32; // Token长度
     private static final int TOKEN_EXPIRE_MINUTES = 30; // Token过期时间(分钟)
