@@ -4,6 +4,7 @@ import com.example.shorturl.common.response.ApiResponse;
 import com.example.shorturl.model.dto.LoginRequest;
 import com.example.shorturl.model.dto.RegisterRequest;
 import com.example.shorturl.service.AuthService;
+import com.example.shorturl.service.OnlineUserService;
 import com.example.shorturl.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,9 @@ public class AuthController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OnlineUserService onlineUserService;
 
     /**
      * 用户登录

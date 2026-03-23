@@ -69,6 +69,8 @@ public class AuthService {
 
         log.info("用户登录成功: username={}, userId={}", username, user.getId());
 
+        onlineUserService.markUserOnline(user.getId());
+
         return LoginResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken)
