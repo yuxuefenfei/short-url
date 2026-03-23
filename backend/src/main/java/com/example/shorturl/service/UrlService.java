@@ -13,7 +13,7 @@ import com.mybatisflex.core.query.QueryWrapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -29,22 +29,19 @@ import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UrlService {
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_PAGE_SIZE = 20;
 
 
-    @Autowired
-    private UrlMappingDao urlMappingDao;
+    private final UrlMappingDao urlMappingDao;
 
-    @Autowired
-    private AccessLogDao accessLogDao;
+    private final AccessLogDao accessLogDao;
 
-    @Autowired
-    private AsyncLogService asyncLogService;
+    private final AsyncLogService asyncLogService;
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${short-url.domain:https://short.ly}")
     private String shortUrlDomain;

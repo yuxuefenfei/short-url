@@ -11,7 +11,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,16 +30,14 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("/api/admin")
+@RequiredArgsConstructor
 public class AdminController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private UrlService urlService;
+    private final UrlService urlService;
 
-    @Autowired
-    private OnlineUserService onlineUserService;
+    private final OnlineUserService onlineUserService;
 
     @RequiresLog(type = "QUERY", module = "USER_MANAGEMENT", description = "查询用户列表")
     @GetMapping("/users")

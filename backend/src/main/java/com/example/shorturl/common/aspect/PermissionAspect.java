@@ -7,11 +7,11 @@ import com.example.shorturl.common.security.JwtUtils;
 import com.example.shorturl.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -46,14 +46,13 @@ import java.util.Optional;
 @Slf4j
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class PermissionAspect {
     private static final String ADMIN_ROLE = "ADMIN";
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private JwtUtils jwtUtils;
+    private final JwtUtils jwtUtils;
 
     @Around("@annotation(com.example.shorturl.common.annotation.RequiresPermission) || " +
             "@within(com.example.shorturl.common.annotation.RequiresPermission)")

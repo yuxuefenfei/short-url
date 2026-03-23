@@ -1,7 +1,8 @@
 package com.example.shorturl.config;
 
+import lombok.RequiredArgsConstructor;
+
 import com.example.shorturl.common.redis.RedisKeyConstants;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -39,10 +40,10 @@ import java.util.Map;
  */
 @Configuration
 @EnableCaching
+@RequiredArgsConstructor
 public class RedisConfig {
 
-    @Autowired
-    private RedisConnectionFactory redisConnectionFactory;
+    private final RedisConnectionFactory redisConnectionFactory;
 
     /**
      * 配置RedisTemplate

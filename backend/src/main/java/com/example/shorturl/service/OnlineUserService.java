@@ -2,7 +2,7 @@ package com.example.shorturl.service;
 
 import com.example.shorturl.common.redis.RedisKeyConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -16,12 +16,12 @@ import java.util.Objects;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OnlineUserService {
 
     private static final String ONLINE_USER_ZSET_KEY = RedisKeyConstants.ONLINE_USERS_ZSET_KEY;
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${admin.online-user.ttl-seconds:1800}")
     private long onlineUserTtlSeconds;

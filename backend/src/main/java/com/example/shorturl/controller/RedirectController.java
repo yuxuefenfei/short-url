@@ -5,7 +5,7 @@ import com.example.shorturl.common.response.ResponseStatus;
 import com.example.shorturl.service.UrlService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,10 +44,10 @@ import java.net.URI;
  */
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 public class RedirectController {
 
-    @Autowired
-    private UrlService urlService;
+    private final UrlService urlService;
 
     /**
      * 短网址重定向

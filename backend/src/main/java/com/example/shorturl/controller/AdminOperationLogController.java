@@ -1,11 +1,12 @@
 package com.example.shorturl.controller;
 
+import lombok.RequiredArgsConstructor;
+
 import com.example.shorturl.common.annotation.RequiresLog;
 import com.example.shorturl.common.response.ApiResponse;
 import com.example.shorturl.common.response.PageResult;
 import com.example.shorturl.model.entity.UserOperationLog;
 import com.example.shorturl.service.OperationLogService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,10 +17,10 @@ import java.time.LocalDateTime;
 
 @RestController
 @RequestMapping("/api/admin/operation-logs")
+@RequiredArgsConstructor
 public class AdminOperationLogController {
 
-    @Autowired
-    private OperationLogService operationLogService;
+    private final OperationLogService operationLogService;
 
     @RequiresLog(type = "QUERY", module = "SYSTEM_MONITOR", description = "查询操作日志")
     @GetMapping

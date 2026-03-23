@@ -7,7 +7,7 @@ import com.example.shorturl.model.entity.table.UserOperationLogTableDef;
 import com.mybatisflex.core.query.QueryWrapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -20,13 +20,13 @@ import java.util.Optional;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class OperationLogService {
     private static final int DEFAULT_PAGE = 1;
     private static final int DEFAULT_PAGE_SIZE = 20;
 
 
-    @Autowired
-    private OperationLogDao operationLogDao;
+    private final OperationLogDao operationLogDao;
 
     @Transactional(readOnly = true)
     public PageResult<UserOperationLog> getOperationLogs(Integer page, Integer size, String keyword,

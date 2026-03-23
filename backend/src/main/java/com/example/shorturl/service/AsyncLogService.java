@@ -9,7 +9,7 @@ import com.example.shorturl.model.entity.UserOperationLog;
 import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -38,16 +38,14 @@ import java.util.Objects;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AsyncLogService {
 
-    @Autowired
-    private OperationLogDao operationLogDao;
+    private final OperationLogDao operationLogDao;
 
-    @Autowired
-    private AccessLogDao urlAccessLogDao;
+    private final AccessLogDao urlAccessLogDao;
 
-    @Autowired
-    private UrlMappingDao urlMappingDao;
+    private final UrlMappingDao urlMappingDao;
 
     /**
      * 异步保存用户操作日志

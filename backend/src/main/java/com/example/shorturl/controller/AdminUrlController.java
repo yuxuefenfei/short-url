@@ -7,7 +7,7 @@ import com.example.shorturl.model.entity.ShortUrlMapping;
 import com.example.shorturl.service.UrlService;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -25,10 +25,10 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/api/admin")
+@RequiredArgsConstructor
 public class AdminUrlController {
 
-    @Autowired
-    private UrlService urlService;
+    private final UrlService urlService;
 
     @Value("${short-url.domain:https://short.ly}")
     private String shortUrlDomain;

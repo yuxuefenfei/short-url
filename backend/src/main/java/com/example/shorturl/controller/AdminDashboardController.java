@@ -10,7 +10,7 @@ import com.example.shorturl.model.entity.table.ShortUrlMappingTableDef;
 import com.example.shorturl.model.entity.table.UrlAccessLogTableDef;
 import com.mybatisflex.core.query.QueryWrapper;
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,13 +29,12 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
+@RequiredArgsConstructor
 public class AdminDashboardController {
 
-    @Autowired
-    private UrlMappingDao urlMappingDao;
+    private final UrlMappingDao urlMappingDao;
 
-    @Autowired
-    private AccessLogDao accessLogDao;
+    private final AccessLogDao accessLogDao;
 
     @Value("${short-url.domain:https://short.ly}")
     private String shortUrlDomain;

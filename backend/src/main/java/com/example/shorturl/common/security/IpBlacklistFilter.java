@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -40,6 +40,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class IpBlacklistFilter extends OncePerRequestFilter {
 
     // Redis键前缀
@@ -52,8 +53,7 @@ public class IpBlacklistFilter extends OncePerRequestFilter {
     private static final int ATTEMPT_WINDOW_MINUTES = 10; // 尝试时间窗口(分钟)
     private static final int DEFAULT_BLOCK_DURATION_HOURS = 24; // 默认封禁时长(小时)
     private static final int PERMANENT_BLOCK_DURATION_DAYS = 365; // 永久封禁时长(天)
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final StringRedisTemplate redisTemplate;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
