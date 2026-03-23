@@ -21,6 +21,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -144,7 +146,9 @@ public class OperationLogAspect {
                     .findFirst()
                     .orElse(null);
 
-            return method != null ? method.getAnnotation(RequiresLog.class) : null;
+            return Optional.ofNullable(method)
+                    .map(m -> m.getAnnotation(RequiresLog.class))
+                    .orElse(null);
         } catch (Exception e) {
             log.error("获取注解失败", e);
             return null;
@@ -157,7 +161,9 @@ public class OperationLogAspect {
     private HttpServletRequest getHttpServletRequest() {
         try {
             ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-            return attributes != null ? attributes.getRequest() : null;
+            return Optional.ofNullable(attributes)
+                    .map(ServletRequestAttributes::getRequest)
+                    .orElse(null);
         } catch (Exception e) {
             log.error("获取HttpServletRequest失败", e);
             return null;
@@ -226,9 +232,10 @@ public class OperationLogAspect {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication != null && authentication.isAuthenticated()) {
                 Object principal = authentication.getPrincipal();
-                if (principal instanceof String && !"anonymousUser".equals(principal)) {
-                    // 尝试根据用户名查找用户
-                    return userService.getUserByUsername((String) principal).getId();
+                if (principal instanceof String username && !"anonymousUser".equals(username)) {
+                    return Optional.ofNullable(userService.getUserByUsername(username))
+                            .map(com.example.shorturl.model.entity.User::getId)
+                            .orElse(null);
                 }
             }
 
@@ -296,7 +303,7 @@ public class OperationLogAspect {
         if (e instanceof BusinessException be) {
             return String.format("业务异常: %s (错误码: %d)", be.getMessage(), be.getCode());
         }
-        return e.getMessage() != null ? e.getMessage() : "未知错误";
+        return Objects.requireNonNullElse(e.getMessage(), "未知错误");
     }
 
     /**

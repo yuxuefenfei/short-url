@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -302,7 +303,7 @@ public class IpBlacklistFilter extends OncePerRequestFilter {
             Long failedAttempts = redisTemplate.opsForZSet().size(attemptsKey);
 
             return new IpBlockInfo(ipAddress, isPermanentBlocked, isTemporaryBlocked,
-                    remainingTime, blockTime, failedAttempts != null ? failedAttempts : 0);
+                    remainingTime, blockTime, Objects.requireNonNullElse(failedAttempts, 0L));
 
         } catch (Exception e) {
             log.error("获取IP封禁信息失败: ip={}, error={}", ipAddress, e.getMessage());

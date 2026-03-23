@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -112,7 +113,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 处理请求方法不支持异常
+     * 处理请求路径不存在异常
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     public ApiResponse<?> handleNoHandlerFoundException(NoHandlerFoundException e, HttpServletRequest request) {
@@ -146,7 +147,7 @@ public class GlobalExceptionHandler {
 
         return ApiResponse.error(ResponseStatus.BAD_REQUEST.getCode(),
                 "参数类型错误: " + e.getName() + " 应该是 " +
-                        (e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "正确类型"));
+                        Optional.ofNullable(e.getRequiredType()).map(Class::getSimpleName).orElse("正确类型"));
     }
 
     /**

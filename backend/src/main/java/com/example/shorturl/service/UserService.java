@@ -14,12 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class UserService {
+    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_USER = "USER";
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
 
     @Autowired
     private UserDao userDao;
@@ -65,7 +70,7 @@ public class UserService {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email);
-        user.setRole(StringUtils.hasText(role) ? role : "USER");
+        user.setRole(StringUtils.hasText(role) ? role : ROLE_USER);
         user.setStatus(1);
         user.setCreatedTime(LocalDateTime.now());
         user.setUpdatedTime(LocalDateTime.now());
@@ -104,27 +109,29 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public User getUserByUsername(String username) {
-        if (!StringUtils.hasText(username)) {
-            return null;
-        }
-        return userDao.selectOneByQuery(
-                QueryWrapper.create().where(UserTableDef.USER.USERNAME.eq(username))
-        );
+        return Optional.ofNullable(username)
+                .filter(StringUtils::hasText)
+                .map(name -> userDao.selectOneByQuery(
+                        QueryWrapper.create().where(UserTableDef.USER.USERNAME.eq(name))
+                ))
+                .orElse(null);
     }
 
     @Transactional(readOnly = true)
     public boolean usernameExists(String username) {
-        if (!StringUtils.hasText(username)) {
-            return false;
-        }
-        return userDao.selectCountByQuery(
-                QueryWrapper.create().where(UserTableDef.USER.USERNAME.eq(username))
-        ) > 0;
+        return Optional.ofNullable(username)
+                .filter(StringUtils::hasText)
+                .map(name -> userDao.selectCountByQuery(
+                        QueryWrapper.create().where(UserTableDef.USER.USERNAME.eq(name))
+                ) > 0)
+                .orElse(false);
     }
 
     @Transactional(readOnly = true)
     public User getUserById(Long userId) {
-        return userId == null ? null : userDao.selectOneById(userId);
+        return Optional.ofNullable(userId)
+                .map(userDao::selectOneById)
+                .orElse(null);
     }
 
     @Transactional
@@ -253,12 +260,12 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public boolean isAdmin(Long userId) {
-        return hasRole(userId, "ADMIN");
+        return hasRole(userId, ROLE_ADMIN);
     }
 
     @Transactional(readOnly = true)
     public boolean isUser(Long userId) {
-        return hasRole(userId, "USER");
+        return hasRole(userId, ROLE_USER);
     }
 
     private QueryWrapper buildUserQuery(String keyword, String role, Integer status) {
@@ -280,17 +287,29 @@ public class UserService {
 
     private List<User> paginate(List<User> users, Integer page, Integer size) {
         if (users == null || users.isEmpty()) {
-            return Collections.emptyList();
+            return List.of();
         }
 
-        int safePage = page == null || page < 1 ? 1 : page;
-        int safeSize = size == null || size < 1 ? 20 : size;
+        int safePage = safePage(page);
+        int safeSize = safeSize(size);
         int fromIndex = Math.max((safePage - 1) * safeSize, 0);
         if (fromIndex >= users.size()) {
-            return Collections.emptyList();
+            return List.of();
         }
 
         int toIndex = Math.min(fromIndex + safeSize, users.size());
         return users.subList(fromIndex, toIndex);
+    }
+
+    private int safePage(Integer page) {
+        return Optional.ofNullable(page)
+                .filter(value -> value > 0)
+                .orElse(DEFAULT_PAGE);
+    }
+
+    private int safeSize(Integer size) {
+        return Optional.ofNullable(size)
+                .filter(value -> value > 0)
+                .orElse(DEFAULT_PAGE_SIZE);
     }
 }

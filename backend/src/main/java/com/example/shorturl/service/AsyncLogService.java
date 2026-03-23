@@ -156,7 +156,7 @@ public class AsyncLogService {
 
             if (mapping != null) {
                 // 更新点击数
-                mapping.setClickCount(mapping.getClickCount() + 1);
+                mapping.setClickCount(java.util.Objects.requireNonNullElse(mapping.getClickCount(), 0L) + 1);
                 urlMappingDao.update(mapping);
                 result = 1; // 表示更新成功
             }
@@ -189,7 +189,7 @@ public class AsyncLogService {
                     .filter(Objects::nonNull)
                     .peek(this::setDefaultValues)
                     .peek(this::limitFieldLength)
-                    .collect(java.util.stream.Collectors.toList());
+                    .toList();
 
             if (!validLogs.isEmpty()) {
                 // 批量插入
@@ -219,7 +219,7 @@ public class AsyncLogService {
             java.util.List<UrlAccessLog> validLogs = accessLogs.stream()
                     .filter(log -> log != null && log.getShortKey() != null)
                     .peek(this::setDefaultValues)
-                    .collect(java.util.stream.Collectors.toList());
+                    .toList();
 
             if (!validLogs.isEmpty()) {
                 // 批量插入

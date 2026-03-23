@@ -238,7 +238,7 @@ public class HealthController {
 
             redisInfo.put("status", "UP");
             redisInfo.put("setOperation", "SUCCESS");
-            redisInfo.put("getOperation", retrievedValue != null ? "SUCCESS" : "FAILED");
+            redisInfo.put("getOperation", Objects.nonNull(retrievedValue) ? "SUCCESS" : "FAILED");
             redisInfo.put("deleteOperation", "SUCCESS");
             redisInfo.put("testValue", testValue);
             redisInfo.put("retrievedValue", retrievedValue);

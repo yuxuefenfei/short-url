@@ -1,5 +1,7 @@
 package com.example.shorturl.common.redis;
 
+import java.util.Locale;
+
 /**
  * Redis Key 统一规范：
  * 1. 所有 Key 使用统一业务前缀 short_url
@@ -38,6 +40,6 @@ public final class RedisKeyConstants {
         if (value == null || value.isBlank()) {
             return "unknown";
         }
-        return value.replaceAll("[^a-zA-Z0-9]+", "_").toLowerCase();
+        return value.replaceAll("[^a-zA-Z0-9]+", "_").toLowerCase(Locale.ROOT);
     }
 }

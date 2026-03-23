@@ -15,6 +15,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -460,7 +461,7 @@ public class CsrfFilter extends OncePerRequestFilter {
         try {
             String userTokensKey = CSRF_USER_TOKENS_KEY_PREFIX + userIdentifier;
             Long count = redisTemplate.opsForSet().size(userTokensKey);
-            return count != null ? count.intValue() : 0;
+            return Objects.requireNonNullElse(count, 0L).intValue();
         } catch (Exception e) {
             log.error("获取用户Token数量失败: user={}, error={}", userIdentifier, e.getMessage());
             return 0;

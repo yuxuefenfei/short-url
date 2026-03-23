@@ -14,12 +14,16 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class OperationLogService {
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
 
     @Autowired
     private OperationLogDao operationLogDao;
@@ -55,7 +59,7 @@ public class OperationLogService {
         List<UserOperationLog> allLogs = operationLogDao.selectListByQuery(QueryWrapper.create());
         long activeUsers = allLogs.stream()
                 .map(UserOperationLog::getUserId)
-                .filter(id -> id != null)
+                .filter(Objects::nonNull)
                 .distinct()
                 .count();
 
@@ -104,14 +108,14 @@ public class OperationLogService {
 
     private List<UserOperationLog> paginate(List<UserOperationLog> records, Integer page, Integer size) {
         if (records == null || records.isEmpty()) {
-            return Collections.emptyList();
+            return List.of();
         }
 
         int safePage = safePage(page);
         int safeSize = safeSize(size);
         int fromIndex = Math.max((safePage - 1) * safeSize, 0);
         if (fromIndex >= records.size()) {
-            return Collections.emptyList();
+            return List.of();
         }
 
         int toIndex = Math.min(fromIndex + safeSize, records.size());
@@ -119,11 +123,15 @@ public class OperationLogService {
     }
 
     private int safePage(Integer page) {
-        return page == null || page < 1 ? 1 : page;
+        return Optional.ofNullable(page)
+                .filter(value -> value > 0)
+                .orElse(DEFAULT_PAGE);
     }
 
     private int safeSize(Integer size) {
-        return size == null || size < 1 ? 20 : size;
+        return Optional.ofNullable(size)
+                .filter(value -> value > 0)
+                .orElse(DEFAULT_PAGE_SIZE);
     }
 
     @Data

@@ -30,6 +30,9 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Service
 public class UrlService {
+    private static final int DEFAULT_PAGE = 1;
+    private static final int DEFAULT_PAGE_SIZE = 20;
+
 
     @Autowired
     private UrlMappingDao urlMappingDao;
@@ -142,7 +145,9 @@ public class UrlService {
     }
 
     public ShortUrlMapping getUrlById(Long id) {
-        return id == null ? null : urlMappingDao.selectOneById(id);
+        return Optional.ofNullable(id)
+                .map(urlMappingDao::selectOneById)
+                .orElse(null);
     }
 
     @Transactional
@@ -175,7 +180,7 @@ public class UrlService {
     @Transactional(readOnly = true)
     public long getTotalClicks() {
         return urlMappingDao.selectListByQuery(QueryWrapper.create()).stream()
-                .mapToLong(mapping -> mapping.getClickCount() == null ? 0 : mapping.getClickCount())
+                .mapToLong(mapping -> Objects.requireNonNullElse(mapping.getClickCount(), 0L))
                 .sum();
     }
 
@@ -217,13 +222,13 @@ public class UrlService {
 
     private List<ShortUrlMapping> paginate(List<ShortUrlMapping> records, Integer page, Integer size) {
         if (records == null || records.isEmpty()) {
-            return Collections.emptyList();
+            return List.of();
         }
-        int safePage = page == null || page < 1 ? 1 : page;
-        int safeSize = size == null || size < 1 ? 20 : size;
+        int safePage = safePage(page);
+        int safeSize = safeSize(size);
         int fromIndex = Math.max((safePage - 1) * safeSize, 0);
         if (fromIndex >= records.size()) {
-            return Collections.emptyList();
+            return List.of();
         }
         int toIndex = Math.min(fromIndex + safeSize, records.size());
         return records.subList(fromIndex, toIndex);
@@ -243,7 +248,10 @@ public class UrlService {
                         .where(UrlAccessLogTableDef.URL_ACCESS_LOG.SHORT_KEY.eq(shortKey))
                         .orderBy(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME, false)
         );
-        return logs.isEmpty() ? null : logs.get(0).getAccessTime();
+        return logs.stream()
+                .findFirst()
+                .map(com.example.shorturl.model.entity.UrlAccessLog::getAccessTime)
+                .orElse(null);
     }
 
     private List<DailyClickPoint> getTrend(String shortKey, int days) {
@@ -281,7 +289,7 @@ public class UrlService {
                 QueryWrapper.create().where(UrlAccessLogTableDef.URL_ACCESS_LOG.SHORT_KEY.eq(shortKey))
         );
         if (logs.isEmpty()) {
-            return Collections.emptyList();
+            return List.of();
         }
 
         Map<String, Long> sourceMap = new LinkedHashMap<>();
@@ -299,6 +307,18 @@ public class UrlService {
                     return item;
                 })
                 .toList();
+    }
+
+    private int safePage(Integer page) {
+        return Optional.ofNullable(page)
+                .filter(value -> value > 0)
+                .orElse(DEFAULT_PAGE);
+    }
+
+    private int safeSize(Integer size) {
+        return Optional.ofNullable(size)
+                .filter(value -> value > 0)
+                .orElse(DEFAULT_PAGE_SIZE);
     }
 
     private void asyncUpdateAccessStats(String shortKey) {

@@ -7,6 +7,9 @@ import com.mybatisflex.annotation.Table;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.function.Predicate;
 
 /**
  * 短网址访问日志实体类
@@ -29,6 +32,22 @@ import java.time.LocalDateTime;
 @Data
 @Table("url_access_log")
 public class UrlAccessLog {
+    private static final List<UserAgentRule> BROWSER_RULES = List.of(
+            new UserAgentRule(agent -> agent.contains("chrome"), "Chrome"),
+            new UserAgentRule(agent -> agent.contains("firefox"), "Firefox"),
+            new UserAgentRule(agent -> agent.contains("safari"), "Safari"),
+            new UserAgentRule(agent -> agent.contains("edge"), "Edge"),
+            new UserAgentRule(agent -> agent.contains("opera"), "Opera")
+    );
+
+    private static final List<UserAgentRule> OS_RULES = List.of(
+            new UserAgentRule(agent -> agent.contains("windows"), "Windows"),
+            new UserAgentRule(agent -> agent.contains("mac"), "macOS"),
+            new UserAgentRule(agent -> agent.contains("linux"), "Linux"),
+            new UserAgentRule(agent -> agent.contains("android"), "Android"),
+            new UserAgentRule(agent -> agent.contains("iphone") || agent.contains("ipad"), "iOS")
+    );
+
 
     /**
      * 主键ID
@@ -78,61 +97,53 @@ public class UrlAccessLog {
      * 判断是否来自移动端
      */
     public boolean isMobile() {
-        if (userAgent == null) {
-            return false;
-        }
-        String lowerUserAgent = userAgent.toLowerCase();
-        return lowerUserAgent.contains("mobile") ||
-                lowerUserAgent.contains("android") ||
-                lowerUserAgent.contains("iphone") ||
-                lowerUserAgent.contains("ipad");
+        String lowerUserAgent = normalizedUserAgent();
+        return !lowerUserAgent.isBlank()
+                && (lowerUserAgent.contains("mobile")
+                || lowerUserAgent.contains("android")
+                || lowerUserAgent.contains("iphone")
+                || lowerUserAgent.contains("ipad"));
     }
 
     /**
      * 获取浏览器类型
      */
     public String getBrowserType() {
-        if (userAgent == null) {
+        String lowerUserAgent = normalizedUserAgent();
+        if (lowerUserAgent.isBlank()) {
             return "Unknown";
         }
 
-        String lowerUserAgent = userAgent.toLowerCase();
-        if (lowerUserAgent.contains("chrome")) {
-            return "Chrome";
-        } else if (lowerUserAgent.contains("firefox")) {
-            return "Firefox";
-        } else if (lowerUserAgent.contains("safari")) {
-            return "Safari";
-        } else if (lowerUserAgent.contains("edge")) {
-            return "Edge";
-        } else if (lowerUserAgent.contains("opera")) {
-            return "Opera";
-        } else {
-            return "Other";
-        }
+        return BROWSER_RULES.stream()
+                .filter(rule -> rule.matches(lowerUserAgent))
+                .map(UserAgentRule::name)
+                .findFirst()
+                .orElse("Other");
     }
 
     /**
      * 获取操作系统类型
      */
     public String getOperatingSystem() {
-        if (userAgent == null) {
+        String lowerUserAgent = normalizedUserAgent();
+        if (lowerUserAgent.isBlank()) {
             return "Unknown";
         }
 
-        String lowerUserAgent = userAgent.toLowerCase();
-        if (lowerUserAgent.contains("windows")) {
-            return "Windows";
-        } else if (lowerUserAgent.contains("mac")) {
-            return "macOS";
-        } else if (lowerUserAgent.contains("linux")) {
-            return "Linux";
-        } else if (lowerUserAgent.contains("android")) {
-            return "Android";
-        } else if (lowerUserAgent.contains("iphone") || lowerUserAgent.contains("ipad")) {
-            return "iOS";
-        } else {
-            return "Other";
+        return OS_RULES.stream()
+                .filter(rule -> rule.matches(lowerUserAgent))
+                .map(UserAgentRule::name)
+                .findFirst()
+                .orElse("Other");
+    }
+
+    private String normalizedUserAgent() {
+        return userAgent == null ? "" : userAgent.toLowerCase(Locale.ROOT);
+    }
+
+    private record UserAgentRule(Predicate<String> matcher, String name) {
+        private boolean matches(String userAgent) {
+            return matcher.test(userAgent);
         }
     }
 }

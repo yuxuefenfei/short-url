@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 /**
  * JWT认证异常处理器
@@ -52,7 +53,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                 getClientIp(request),
                 request.getRequestURI(),
                 request.getMethod(),
-                authException != null ? authException.getMessage() : "未知错误"
+                Objects.requireNonNullElse(authException == null ? null : authException.getMessage(), "未知错误")
         );
 
         // 设置响应状态码

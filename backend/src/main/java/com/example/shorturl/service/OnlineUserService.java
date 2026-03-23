@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 /**
  * 在线用户统计服务
  *
@@ -42,7 +44,7 @@ public class OnlineUserService {
         try {
             cleanupExpired(System.currentTimeMillis());
             Long count = redisTemplate.opsForZSet().zCard(ONLINE_USER_ZSET_KEY);
-            return count == null ? 0L : count;
+            return Objects.requireNonNullElse(count, 0L);
         } catch (Exception e) {
             log.warn("统计在线用户失败: {}", e.getMessage());
             return 0L;

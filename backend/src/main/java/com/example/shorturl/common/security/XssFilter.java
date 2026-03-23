@@ -11,6 +11,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -309,7 +310,7 @@ public class XssFilter extends OncePerRequestFilter {
                 "eval", "document.cookie", "window.location",
                 "innerHTML", "iframe", "frame"};
 
-        String lowerValue = value.toLowerCase();
+        String lowerValue = value.toLowerCase(Locale.ROOT);
         for (String keyword : xssKeywords) {
             if (lowerValue.contains(keyword)) {
                 count++;
@@ -345,7 +346,7 @@ public class XssFilter extends OncePerRequestFilter {
                 "confirm("
         };
 
-        String lowerValue = value.toLowerCase();
+        String lowerValue = value.toLowerCase(Locale.ROOT);
         for (String payload : maliciousPayloads) {
             if (lowerValue.contains(payload)) {
                 return true;

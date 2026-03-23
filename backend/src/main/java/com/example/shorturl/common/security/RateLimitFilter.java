@@ -15,7 +15,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * API访问限流过滤器
@@ -206,7 +207,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             // 执行Lua脚本进行限流检查
             Long result = redisTemplate.execute(
                     rateLimitScript,
-                    Collections.singletonList(key),
+                    List.of(key),
                     String.valueOf(now),
                     String.valueOf(config.windowSeconds),
                     String.valueOf(config.maxRequests)
@@ -264,7 +265,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return new RateLimitStats(
                     identifier,
                     apiPath,
-                    count != null ? count : 0,
+                    Objects.requireNonNullElse(count, 0L),
                     getRateLimitConfig(apiPath)
             );
         } catch (Exception e) {

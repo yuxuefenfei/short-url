@@ -25,10 +25,7 @@ import java.nio.file.FileSystems;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/admin/dashboard")
@@ -58,7 +55,9 @@ public class AdminDashboardController {
     }
 
     private TrendData buildTrend(Integer days) {
-        int period = days == null || days < 1 ? 7 : days;
+        int period = Optional.ofNullable(days)
+                .filter(value -> value > 0)
+                .orElse(7);
         LocalDate start = LocalDate.now().minusDays(period - 1L);
 
         Map<LocalDate, Long> clickMap = new LinkedHashMap<>();
@@ -108,7 +107,7 @@ public class AdminDashboardController {
                     item.setShortKey(mapping.getShortKey());
                     item.setShortUrl(shortUrlDomain + "/" + mapping.getShortKey());
                     item.setTitle(mapping.getTitle());
-                    item.setClickCount(mapping.getClickCount() == null ? 0L : mapping.getClickCount());
+                    item.setClickCount(Objects.requireNonNullElse(mapping.getClickCount(), 0L));
                     return item;
                 })
                 .toList();

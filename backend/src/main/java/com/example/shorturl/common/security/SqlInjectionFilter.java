@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
@@ -218,7 +219,7 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
             }
         }
 
-        String lowerValue = value.toLowerCase();
+        String lowerValue = value.toLowerCase(Locale.ROOT);
 
         // 检查SQL注入模式
         for (Pattern pattern : SQL_INJECTION_PATTERNS) {
@@ -282,7 +283,7 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
                 "1'or 1=1/*"
         };
 
-        String lowerValue = value.toLowerCase();
+        String lowerValue = value.toLowerCase(Locale.ROOT);
         for (String combination : maliciousCombinations) {
             if (lowerValue.contains(combination)) {
                 return true;
