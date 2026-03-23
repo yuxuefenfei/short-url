@@ -65,7 +65,7 @@ public class RedisConfig {
     }
 
     /**
-     * 配置缓存管理器
+     * 配置缓存管理器，只会作用于Spring Cache 抽象层，不会影响RedisTemplate
      */
     @Bean
     public CacheManager cacheManager() {
@@ -74,7 +74,7 @@ public class RedisConfig {
                 .entryTtl(Duration.ofHours(1)) // 默认1小时过期
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
-                .computePrefixWith(cacheName -> RedisKeyConstants.CACHE_PREFIX + cacheName + ":")
+                .computePrefixWith(cacheName -> RedisKeyConstants.BUSINESS_PREFIX + cacheName + ":")
                 .disableCachingNullValues();
 
         // 自定义缓存配置
@@ -82,19 +82,14 @@ public class RedisConfig {
 
         // 短网址映射缓存 - 24小时
         cacheConfigurations.put("short_url_mapping", defaultConfig.entryTtl(Duration.ofHours(24)));
-
         // 用户信息缓存 - 12小时
         cacheConfigurations.put("user_info", defaultConfig.entryTtl(Duration.ofHours(12)));
-
         // 访问统计缓存 - 5分钟
         cacheConfigurations.put("access_stats", defaultConfig.entryTtl(Duration.ofMinutes(5)));
-
         // 操作日志缓存 - 30分钟
         cacheConfigurations.put("operation_logs", defaultConfig.entryTtl(Duration.ofMinutes(30)));
-
         // 黑名单缓存 - 永久
         cacheConfigurations.put("blacklist", defaultConfig.entryTtl(Duration.ofDays(365)));
-
         // 限流缓存 - 1小时
         cacheConfigurations.put("rate_limit", defaultConfig.entryTtl(Duration.ofHours(1)));
 

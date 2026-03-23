@@ -24,11 +24,7 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -199,7 +195,7 @@ public class UrlService {
 
     public void clearUrlCache(String shortKey) {
         try {
-            redisTemplate.delete(RedisKeyConstants.CACHE_PREFIX + "short_url_mapping:" + shortKey);
+            redisTemplate.delete(RedisKeyConstants.BUSINESS_PREFIX + "short_url_mapping:" + shortKey);
         } catch (Exception e) {
             log.warn("清理缓存失败: key={}, error={}", shortKey, e.getMessage());
         }
