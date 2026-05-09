@@ -647,19 +647,10 @@ GET /api/admin/operation-logs
 
 ## 🧪 测试
 
-### 单元测试
-```bash
-# 运行单元测试
-npm run test:unit
+当前仓库暂未配置前端单元测试或 E2E 测试脚本。提交前至少执行：
 
-# 生成测试报告
-npm run test:coverage
-```
-
-### E2E测试
 ```bash
-# 运行端到端测试
-npm run test:e2e
+npm run build
 ```
 
 ## 📦 部署

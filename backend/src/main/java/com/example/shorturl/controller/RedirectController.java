@@ -2,6 +2,7 @@ package com.example.shorturl.controller;
 
 import com.example.shorturl.common.exception.BusinessException;
 import com.example.shorturl.common.response.ResponseStatus;
+import com.example.shorturl.service.AsyncLogService;
 import com.example.shorturl.service.UrlService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,8 @@ public class RedirectController {
 
     private final UrlService urlService;
 
+    private final AsyncLogService asyncLogService;
+
     /**
      * 短网址重定向
      *
@@ -66,6 +69,7 @@ public class RedirectController {
         try {
             // 获取原始URL
             String originalUrl = urlService.getOriginalUrl(shortKey);
+            asyncLogService.logUrlAccess(shortKey, request);
 
             // 执行HTTP 302重定向
             return ResponseEntity.status(HttpStatus.FOUND)

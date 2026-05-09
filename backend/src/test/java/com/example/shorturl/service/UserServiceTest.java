@@ -2,8 +2,11 @@ package com.example.shorturl.service;
 
 import com.example.shorturl.common.exception.BusinessException;
 import com.example.shorturl.common.response.ResponseStatus;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.dao.UserDao;
 import com.example.shorturl.model.entity.User;
+import com.mybatisflex.core.paginate.Page;
+import com.mybatisflex.core.query.QueryWrapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -33,6 +37,9 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private AppConfig appConfig;
 
     @InjectMocks
     private UserService userService;
@@ -50,6 +57,12 @@ class UserServiceTest {
         testUser.setStatus(1);
         testUser.setCreatedTime(LocalDateTime.now());
         testUser.setUpdatedTime(LocalDateTime.now());
+
+        AppConfig.Pagination pagination = new AppConfig.Pagination();
+        pagination.setDefaultPage(1);
+        pagination.setDefaultSize(20);
+        pagination.setMaxSize(200);
+        lenient().when(appConfig.getPagination()).thenReturn(pagination);
     }
 
     @Test
@@ -151,7 +164,8 @@ class UserServiceTest {
 
     @Test
     void testGetUserListSuccess() {
-        when(userDao.selectListByQuery(any())).thenReturn(List.of(testUser));
+        when(userDao.paginate(any(), any(), any(QueryWrapper.class)))
+                .thenReturn(new Page<>(List.of(testUser), 1, 10, 1));
 
         List<User> users = userService.getUserList(1, 10, "test");
 

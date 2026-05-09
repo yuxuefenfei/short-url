@@ -2,6 +2,7 @@ package com.example.shorturl.controller;
 
 import com.example.shorturl.common.annotation.RequiresLog;
 import com.example.shorturl.common.response.ApiResponse;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.dao.AccessLogDao;
 import com.example.shorturl.dao.UrlMappingDao;
 import com.example.shorturl.model.entity.ShortUrlMapping;
@@ -11,7 +12,6 @@ import com.example.shorturl.model.entity.table.UrlAccessLogTableDef;
 import com.mybatisflex.core.query.QueryWrapper;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,15 +36,11 @@ public class AdminDashboardController {
 
     private final AccessLogDao accessLogDao;
 
-    @Value("${short-url.domain:https://short.ly}")
-    private String shortUrlDomain;
-
-    @Value("${server.port:8080}")
-    private int serverPort;
+    private final AppConfig appConfig;
 
     @RequiresLog(type = "QUERY", module = "SYSTEM_MONITOR", description = "查询管理后台概览")
     @GetMapping("/overview")
-    public ApiResponse<DashboardOverview> getOverview(@RequestParam(defaultValue = "7") Integer days) {
+    public ApiResponse<DashboardOverview> getOverview(@RequestParam(required = false) Integer days) {
         DashboardOverview overview = new DashboardOverview();
         overview.setTrend(buildTrend(days));
         overview.setHotUrls(buildHotUrls());
@@ -56,7 +52,7 @@ public class AdminDashboardController {
     private TrendData buildTrend(Integer days) {
         int period = Optional.ofNullable(days)
                 .filter(value -> value > 0)
-                .orElse(7);
+                .orElse(appConfig.getDashboard().getDefaultTrendDays());
         LocalDate start = LocalDate.now().minusDays(period - 1L);
 
         Map<LocalDate, Long> clickMap = new LinkedHashMap<>();
@@ -96,15 +92,20 @@ public class AdminDashboardController {
 
     private List<HotUrlItem> buildHotUrls() {
         List<ShortUrlMapping> mappings = urlMappingDao.selectListByQuery(
-                QueryWrapper.create().orderBy(ShortUrlMappingTableDef.SHORT_URL_MAPPING.CLICK_COUNT, false)
+                QueryWrapper.create()
+                        .orderBy(ShortUrlMappingTableDef.SHORT_URL_MAPPING.CLICK_COUNT, false)
+                        .limit(5)
         );
 
+        if (mappings == null) {
+            return List.of();
+        }
+
         return mappings.stream()
-                .limit(5)
                 .map(mapping -> {
                     HotUrlItem item = new HotUrlItem();
                     item.setShortKey(mapping.getShortKey());
-                    item.setShortUrl(shortUrlDomain + "/" + mapping.getShortKey());
+                    item.setShortUrl(appConfig.getShortUrl().getDomain() + "/" + mapping.getShortKey());
                     item.setTitle(mapping.getTitle());
                     item.setClickCount(Objects.requireNonNullElse(mapping.getClickCount(), 0L));
                     return item;
@@ -114,11 +115,16 @@ public class AdminDashboardController {
 
     private List<RecentAccessItem> buildRecentAccess() {
         List<UrlAccessLog> logs = accessLogDao.selectListByQuery(
-                QueryWrapper.create().orderBy(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME, false)
+                QueryWrapper.create()
+                        .orderBy(UrlAccessLogTableDef.URL_ACCESS_LOG.ACCESS_TIME, false)
+                        .limit(8)
         );
 
+        if (logs == null) {
+            return List.of();
+        }
+
         return logs.stream()
-                .limit(8)
                 .map(log -> {
                     RecentAccessItem item = new RecentAccessItem();
                     item.setShortKey(log.getShortKey());
@@ -215,7 +221,7 @@ public class AdminDashboardController {
     private int readNetworkLatency() {
         long start = System.nanoTime();
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress("127.0.0.1", serverPort), 1000);
+            socket.connect(new InetSocketAddress("127.0.0.1", appConfig.getServer().getPort()), 1000);
             long end = System.nanoTime();
             return (int) Math.max(1, Math.round((end - start) / 1_000_000.0));
         } catch (Exception ignored) {

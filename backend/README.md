@@ -350,8 +350,8 @@ sudo systemctl start short-url
 
 **健康检查接口：**
 
-- `GET /api/health` - 应用健康状态
-- `GET /api/metrics` - 应用指标（需要配置监控）
+- `GET /health` - 应用健康状态
+- `GET /actuator/metrics` - 应用指标（需要配置监控）
 
 **监控脚本：**
 
@@ -940,17 +940,21 @@ spring:
       port: 6379
       database: 0
 
-time:
-  secret: mySecretKey123456789012345678901234567890
-  expiration: 86400000
-
-short-url:
-  domain: https://short.ly
-  key-length: 6
-  cache-expire-days: 7
-
 server:
   port: 8080
+
+app:
+  application:
+    name: short-url
+  server:
+    port: 8080
+  short-url:
+    domain: https://short.ly
+    key-length: 6
+    cache-expire-days: 7
+  jwt:
+    secret: ${JWT_SECRET}
+    expiration: 86400000
 ```
 
 ## 🗄️ 数据库设计
@@ -1644,7 +1648,7 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: short_url_db
     ports:
       - "3306:3306"
@@ -1705,18 +1709,14 @@ chore: 构建过程或辅助工具的变动
 
 ### 测试完成情况
 
-- ✅ **单元测试**: 36个测试用例，通过率100%，覆盖率85%+
-- ✅ **集成测试**: 10个API测试场景，通过率100%
-- ✅ **性能测试**: 满足5000+ QPS要求
-- ✅ **安全测试**: 通过OWASP Top 10测试
+- 已配置后端单元测试和控制器测试
+- 当前仓库未包含性能测试脚本和安全扫描脚本
 
 ### 测试文件
 
 - `src/test/java/com/example/shorturl/service/UrlServiceTest.java`
 - `src/test/java/com/example/shorturl/service/UserServiceTest.java`
 - `src/test/java/com/example/shorturl/controller/UrlControllerTest.java`
-- `performance-test.gatling.scala` (性能测试)
-- `security-test.py` (安全测试)
 
 ### 执行测试
 
@@ -1724,14 +1724,8 @@ chore: 构建过程或辅助工具的变动
 # 单元测试
 mvn test
 
-# 集成测试
-mvn verify -P integration-test
-
-# 性能测试
-python security-test.py
-
-# 安全测试
-gatling.sh -s ShortUrlPerformanceTest
+# 编译检查
+mvn -DskipTests compile
 ```
 
 ## 🤝 贡献指南

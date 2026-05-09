@@ -58,16 +58,6 @@ logging:
       max-history: 30
       total-size-cap: 3GB
 
-# 生产环境JWT配置（较长的过期时间）
-jwt:
-  secret: ${JWT_SECRET:your-production-secret-key-must-be-very-long-and-secure}
-  expiration: 86400000  # 24小时
-
-# 生产环境短网址配置
-short-url:
-  domain: ${SHORT_URL_DOMAIN:https://short.ly}
-  cache-expire-days: 30  # 生产环境缓存30天
-
 # 生产环境Actuator配置（仅暴露必要端点）
 management:
   endpoints:
@@ -87,6 +77,26 @@ management:
     port: 8081  # 管理端口与业务端口分离
 
 app:
+  application:
+    name: short-url
+  server:
+    port: ${SERVER_PORT:8080}
+  short-url:
+    domain: ${SHORT_URL_DOMAIN:https://short.ly}
+    key-length: 6
+    cache-expire-days: 30
+  jwt:
+    secret: ${JWT_SECRET:your-production-secret-key-must-be-very-long-and-secure}
+    expiration: 86400000
+  admin:
+    online-user:
+      ttl-seconds: 1800
+  pagination:
+    default-page: 1
+    default-size: 20
+    max-size: 200
+  dashboard:
+    default-trend-days: 7
   # 生产环境安全限制
   security:
     rate-limit:
@@ -94,8 +104,18 @@ app:
       ip-blacklist-enabled: true
     cors:
       allowed-origins: ${CORS_ORIGINS:https://short.ly,https://admin.short.ly}
-      allowed-methods: GET,POST,PUT,DELETE,OPTIONS
-      allowed-headers: "*"
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+      allowed-headers:
+        - "*"
+      exposed-headers:
+        - Authorization
+        - X-Request-ID
+        - X-Response-Time
       max-age: 3600
   # 生产环境监控配置
   monitoring:

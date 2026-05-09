@@ -11,7 +11,7 @@ const routes = [
     meta: { title: '短网址生成器' }
   },
   {
-    path: '/stats',
+    path: '/stats/:shortKey?',
     name: 'Stats',
     component: () => import('@/pages/Stats.vue'),
     meta: { title: '访问统计' }

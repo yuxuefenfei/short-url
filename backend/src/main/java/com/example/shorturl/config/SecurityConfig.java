@@ -19,8 +19,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Arrays;
-
 /**
  * Spring Security配置类
  * <p>
@@ -51,6 +49,8 @@ public class SecurityConfig {
     private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    private final AppConfig appConfig;
 
     /**
      * 配置安全过滤器链
@@ -116,47 +116,22 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
 
         // 允许的源
-        configuration.setAllowedOriginPatterns(Arrays.asList(
-                "http://localhost:5173",  // 前端开发服务器
-                "http://localhost:3000",  // 备用端口
-                "https://short.ly",        // 生产环境域名
-                "https://*.short.ly"      // 子域名
-        ));
+        configuration.setAllowedOriginPatterns(appConfig.getSecurity().getCors().getAllowedOrigins());
 
         // 允许的HTTP方法
-        configuration.setAllowedMethods(Arrays.asList(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"
-        ));
+        configuration.setAllowedMethods(appConfig.getSecurity().getCors().getAllowedMethods());
 
         // 允许的请求头
-        configuration.setAllowedHeaders(Arrays.asList(
-                "Authorization",
-                "Content-Type",
-                "Accept",
-                "Origin",
-                "User-Agent",
-                "DNT",
-                "Cache-Control",
-                "X-Mx-ReqToken",
-                "Keep-Alive",
-                "X-Requested-With",
-                "If-Modified-Since",
-                "X-CustomHeader",
-                "X-Request-ID"
-        ));
+        configuration.setAllowedHeaders(appConfig.getSecurity().getCors().getAllowedHeaders());
 
         // 允许携带凭证
         configuration.setAllowCredentials(true);
 
         // 预检请求缓存时间
-        configuration.setMaxAge(3600L);
+        configuration.setMaxAge(appConfig.getSecurity().getCors().getMaxAge());
 
         // 暴露的响应头
-        configuration.setExposedHeaders(Arrays.asList(
-                "Authorization",
-                "X-Request-ID",
-                "X-Response-Time"
-        ));
+        configuration.setExposedHeaders(appConfig.getSecurity().getCors().getExposedHeaders());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

@@ -2,11 +2,12 @@ package com.example.shorturl.controller;
 
 import com.example.shorturl.common.redis.RedisKeyConstants;
 import com.example.shorturl.common.response.ApiResponse;
+import com.example.shorturl.config.AppConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import com.zaxxer.hikari.HikariPoolMXBean;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,11 +54,7 @@ public class HealthController {
 
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${spring.application.name:short-url}")
-    private String applicationName;
-
-    @Value("${server.port:8080}")
-    private String serverPort;
+    private final AppConfig appConfig;
 
     /**
      * 基础健康检查接口
@@ -68,7 +65,7 @@ public class HealthController {
 
         // 应用基本信息
         healthInfo.put("status", "UP");
-        healthInfo.put("application", applicationName);
+        healthInfo.put("application", appConfig.getApplication().getName());
         healthInfo.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         // 检查数据库连接
@@ -91,8 +88,8 @@ public class HealthController {
         Map<String, Object> detailedInfo = new HashMap<>();
 
         detailedInfo.put("status", "UP");
-        detailedInfo.put("application", applicationName);
-        detailedInfo.put("serverPort", serverPort);
+        detailedInfo.put("application", appConfig.getApplication().getName());
+        detailedInfo.put("serverPort", appConfig.getServer().getPort());
         detailedInfo.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
 
         // 数据库详细检查
@@ -143,12 +140,10 @@ public class HealthController {
     private Map<String, Object> checkDatabaseHealth() {
         Map<String, Object> dbInfo = new HashMap<>();
 
-        try {
-            Connection connection = dataSource.getConnection();
+        try (Connection connection = dataSource.getConnection()) {
             dbInfo.put("status", "UP");
             dbInfo.put("url", connection.getMetaData().getURL());
             dbInfo.put("username", connection.getMetaData().getUserName());
-            connection.close();
         } catch (SQLException e) {
             dbInfo.put("status", "DOWN");
             dbInfo.put("error", e.getMessage());
@@ -164,9 +159,8 @@ public class HealthController {
     private Map<String, Object> checkRedisHealth() {
         Map<String, Object> redisInfo = new HashMap<>();
 
-        try {
-            // 使用ping命令检查Redis连接
-            String result = Objects.requireNonNull(Objects.requireNonNull(redisTemplate.getConnectionFactory())).getConnection().ping();
+        try (RedisConnection connection = Objects.requireNonNull(redisTemplate.getConnectionFactory()).getConnection()) {
+            String result = connection.ping();
             redisInfo.put("status", "UP");
             redisInfo.put("response", result);
         } catch (Exception e) {
@@ -184,8 +178,7 @@ public class HealthController {
     private Map<String, Object> checkDatabaseDetailed() {
         Map<String, Object> dbInfo = new HashMap<>();
 
-        try {
-            Connection connection = dataSource.getConnection();
+        try (Connection connection = dataSource.getConnection()) {
             dbInfo.put("status", "UP");
             dbInfo.put("url", connection.getMetaData().getURL());
             dbInfo.put("username", connection.getMetaData().getUserName());
@@ -204,8 +197,6 @@ public class HealthController {
                     dbInfo.put("threadsAwaitingConnection", pool.getThreadsAwaitingConnection());
                 }
             }
-
-            connection.close();
         } catch (SQLException e) {
             dbInfo.put("status", "DOWN");
             dbInfo.put("error", e.getMessage());
@@ -335,9 +326,7 @@ public class HealthController {
      * 检查数据库是否健康
      */
     private boolean isDatabaseHealthy() {
-        try {
-            Connection connection = dataSource.getConnection();
-            connection.close();
+        try (Connection ignored = dataSource.getConnection()) {
             return true;
         } catch (SQLException e) {
             log.error("数据库健康检查失败", e);
@@ -349,8 +338,8 @@ public class HealthController {
      * 检查Redis是否健康
      */
     private boolean isRedisHealthy() {
-        try {
-            Objects.requireNonNull(redisTemplate.getConnectionFactory()).getConnection().ping();
+        try (RedisConnection connection = Objects.requireNonNull(redisTemplate.getConnectionFactory()).getConnection()) {
+            connection.ping();
             return true;
         } catch (Exception e) {
             log.error("Redis健康检查失败", e);

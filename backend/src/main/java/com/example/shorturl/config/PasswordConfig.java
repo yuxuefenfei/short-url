@@ -25,18 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 public class PasswordConfig {
 
-    public static void main(String[] args) {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
-        String password = "admin123";
-        String encoded = encoder.encode(password);
-        System.out.println("Password: " + password);
-        System.out.println("Encoded:  " + encoded);
-        System.out.println("Strength: 12");
-
-        // 验证
-        System.out.println("Matches: " + encoder.matches(password, encoded));
-    }
-
     /**
      * BCrypt密码加密器
      *

@@ -1,9 +1,12 @@
 package com.example.shorturl.service;
 
 import com.example.shorturl.common.response.PageResult;
+import com.example.shorturl.common.utils.PageUtils;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.dao.OperationLogDao;
 import com.example.shorturl.model.entity.UserOperationLog;
 import com.example.shorturl.model.entity.table.UserOperationLogTableDef;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -14,19 +17,17 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+
+import static com.mybatisflex.core.query.QueryMethods.count;
+import static com.mybatisflex.core.query.QueryMethods.distinct;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class OperationLogService {
-    private static final int DEFAULT_PAGE = 1;
-    private static final int DEFAULT_PAGE_SIZE = 20;
-
-
     private final OperationLogDao operationLogDao;
+
+    private final AppConfig appConfig;
 
     @Transactional(readOnly = true)
     public PageResult<UserOperationLog> getOperationLogs(Integer page, Integer size, String keyword,
@@ -35,12 +36,11 @@ public class OperationLogService {
         QueryWrapper queryWrapper = buildQuery(keyword, module, operationType, status, startTime, endTime);
         queryWrapper.orderBy(UserOperationLogTableDef.USER_OPERATION_LOG.OPERATION_TIME, false);
 
-        List<UserOperationLog> records = operationLogDao.selectListByQuery(queryWrapper);
-        long total = operationLogDao.selectCountByQuery(
-                buildQuery(keyword, module, operationType, status, startTime, endTime)
-        );
+        int safePage = PageUtils.safePage(page, appConfig.getPagination());
+        int safeSize = PageUtils.safeSize(size, appConfig.getPagination());
+        Page<UserOperationLog> records = operationLogDao.paginate(safePage, safeSize, queryWrapper);
 
-        return PageResult.of(paginate(records, page, size), total, safePage(page), safeSize(size));
+        return PageResult.of(PageUtils.records(records), records.getTotalRow(), safePage, safeSize);
     }
 
     @Transactional(readOnly = true)
@@ -56,19 +56,19 @@ public class OperationLogService {
                 QueryWrapper.create().where(UserOperationLogTableDef.USER_OPERATION_LOG.OPERATION_TIME.ge(LocalDate.now().atStartOfDay()))
         );
 
-        List<UserOperationLog> allLogs = operationLogDao.selectListByQuery(QueryWrapper.create());
-        long activeUsers = allLogs.stream()
-                .map(UserOperationLog::getUserId)
-                .filter(Objects::nonNull)
-                .distinct()
-                .count();
+        Long activeUsers = operationLogDao.selectObjectByQueryAs(
+                QueryWrapper.create()
+                        .select(count(distinct(UserOperationLogTableDef.USER_OPERATION_LOG.USER_ID)))
+                        .where(UserOperationLogTableDef.USER_OPERATION_LOG.USER_ID.isNotNull()),
+                Long.class
+        );
 
         OperationLogStats stats = new OperationLogStats();
         stats.setTotalOperations(totalOperations);
         stats.setSuccessOperations(successOperations);
         stats.setFailedOperations(failedOperations);
         stats.setTodayOperations(todayOperations);
-        stats.setActiveUsers(activeUsers);
+        stats.setActiveUsers(activeUsers == null ? 0L : activeUsers);
         return stats;
     }
 
@@ -104,34 +104,6 @@ public class OperationLogService {
         }
 
         return queryWrapper;
-    }
-
-    private List<UserOperationLog> paginate(List<UserOperationLog> records, Integer page, Integer size) {
-        if (records == null || records.isEmpty()) {
-            return List.of();
-        }
-
-        int safePage = safePage(page);
-        int safeSize = safeSize(size);
-        int fromIndex = Math.max((safePage - 1) * safeSize, 0);
-        if (fromIndex >= records.size()) {
-            return List.of();
-        }
-
-        int toIndex = Math.min(fromIndex + safeSize, records.size());
-        return records.subList(fromIndex, toIndex);
-    }
-
-    private int safePage(Integer page) {
-        return Optional.ofNullable(page)
-                .filter(value -> value > 0)
-                .orElse(DEFAULT_PAGE);
-    }
-
-    private int safeSize(Integer size) {
-        return Optional.ofNullable(size)
-                .filter(value -> value > 0)
-                .orElse(DEFAULT_PAGE_SIZE);
     }
 
     @Data

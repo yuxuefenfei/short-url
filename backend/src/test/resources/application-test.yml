@@ -31,9 +31,45 @@ mybatis-flex:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-jwt:
-  secret: testSecretKeyForTestingPurposesOnlyDoNotUseInProduction
-  expiration: 86400000
+app:
+  application:
+    name: short-url-test
+  server:
+    port: 8080
+  short-url:
+    domain: https://short.ly
+    key-length: 6
+    cache-expire-days: 7
+  jwt:
+    secret: testSecretKeyForTestingPurposesOnlyDoNotUseInProduction
+    expiration: 86400000
+  admin:
+    online-user:
+      ttl-seconds: 1800
+  pagination:
+    default-page: 1
+    default-size: 20
+    max-size: 200
+  dashboard:
+    default-trend-days: 7
+  security:
+    cors:
+      allowed-origins:
+        - http://localhost:5173
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        - HEAD
+      allowed-headers:
+        - "*"
+      exposed-headers:
+        - Authorization
+        - X-Request-ID
+        - X-Response-Time
+      max-age: 3600
 
 logging:
   level:

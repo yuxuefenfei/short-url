@@ -4,17 +4,19 @@ import com.example.shorturl.common.exception.BusinessException;
 import com.example.shorturl.common.redis.RedisKeyConstants;
 import com.example.shorturl.common.response.ResponseStatus;
 import com.example.shorturl.common.utils.ShortUrlGenerator;
+import com.example.shorturl.common.utils.PageUtils;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.dao.AccessLogDao;
 import com.example.shorturl.dao.UrlMappingDao;
 import com.example.shorturl.model.entity.ShortUrlMapping;
 import com.example.shorturl.model.entity.table.ShortUrlMappingTableDef;
 import com.example.shorturl.model.entity.table.UrlAccessLogTableDef;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -27,27 +29,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.mybatisflex.core.query.QueryMethods.sum;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class UrlService {
-    private static final int DEFAULT_PAGE = 1;
-    private static final int DEFAULT_PAGE_SIZE = 20;
-
-
     private final UrlMappingDao urlMappingDao;
 
     private final AccessLogDao accessLogDao;
 
-    private final AsyncLogService asyncLogService;
-
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${short-url.domain:https://short.ly}")
-    private String shortUrlDomain;
-
-    @Value("${short-url.cache-expire-days:7}")
-    private int cacheExpireDays;
+    private final AppConfig appConfig;
 
     @Transactional
     public String createShortUrl(String originalUrl, String title, LocalDateTime expiredTime) {
@@ -92,7 +86,6 @@ public class UrlService {
             throw new BusinessException(ResponseStatus.SHORT_URL_DISABLED);
         }
 
-        asyncUpdateAccessStats(shortKey);
         return mapping.getOriginalUrl();
     }
 
@@ -106,7 +99,7 @@ public class UrlService {
 
         UrlStats stats = new UrlStats();
         stats.setShortKey(shortKey);
-        stats.setShortUrl(shortUrlDomain + "/" + shortKey);
+        stats.setShortUrl(appConfig.getShortUrl().getDomain() + "/" + shortKey);
         stats.setOriginalUrl(mapping.getOriginalUrl());
         stats.setTitle(mapping.getTitle());
         stats.setTotalClicks(mapping.getClickCount());
@@ -122,7 +115,12 @@ public class UrlService {
     public List<ShortUrlMapping> getUrlList(Integer page, Integer size, String keyword, Integer status) {
         QueryWrapper queryWrapper = buildUrlQuery(keyword, status);
         queryWrapper.orderBy(ShortUrlMappingTableDef.SHORT_URL_MAPPING.CREATED_TIME, false);
-        return paginate(urlMappingDao.selectListByQuery(queryWrapper), page, size);
+        Page<ShortUrlMapping> result = urlMappingDao.paginate(
+                PageUtils.safePage(page, appConfig.getPagination()),
+                PageUtils.safeSize(size, appConfig.getPagination()),
+                queryWrapper
+        );
+        return PageUtils.records(result);
     }
 
     public Long getUrlCount(String keyword, Integer status) {
@@ -176,9 +174,11 @@ public class UrlService {
 
     @Transactional(readOnly = true)
     public long getTotalClicks() {
-        return urlMappingDao.selectListByQuery(QueryWrapper.create()).stream()
-                .mapToLong(mapping -> Objects.requireNonNullElse(mapping.getClickCount(), 0L))
-                .sum();
+        Long totalClicks = urlMappingDao.selectObjectByQueryAs(
+                QueryWrapper.create().select(sum(ShortUrlMappingTableDef.SHORT_URL_MAPPING.CLICK_COUNT)),
+                Long.class
+        );
+        return Objects.requireNonNullElse(totalClicks, 0L);
     }
 
     @Transactional(readOnly = true)
@@ -215,20 +215,6 @@ public class UrlService {
             queryWrapper.and(ShortUrlMappingTableDef.SHORT_URL_MAPPING.STATUS.eq(status));
         }
         return queryWrapper;
-    }
-
-    private List<ShortUrlMapping> paginate(List<ShortUrlMapping> records, Integer page, Integer size) {
-        if (records == null || records.isEmpty()) {
-            return List.of();
-        }
-        int safePage = safePage(page);
-        int safeSize = safeSize(size);
-        int fromIndex = Math.max((safePage - 1) * safeSize, 0);
-        if (fromIndex >= records.size()) {
-            return List.of();
-        }
-        int toIndex = Math.min(fromIndex + safeSize, records.size());
-        return records.subList(fromIndex, toIndex);
     }
 
     private Long getTodayClicks(String shortKey) {
@@ -304,26 +290,6 @@ public class UrlService {
                     return item;
                 })
                 .toList();
-    }
-
-    private int safePage(Integer page) {
-        return Optional.ofNullable(page)
-                .filter(value -> value > 0)
-                .orElse(DEFAULT_PAGE);
-    }
-
-    private int safeSize(Integer size) {
-        return Optional.ofNullable(size)
-                .filter(value -> value > 0)
-                .orElse(DEFAULT_PAGE_SIZE);
-    }
-
-    private void asyncUpdateAccessStats(String shortKey) {
-        try {
-            asyncLogService.updateClickCount(shortKey);
-        } catch (Exception e) {
-            log.error("异步更新访问统计失败: key={}, error={}", shortKey, e.getMessage());
-        }
     }
 
     private String generateUniqueShortKey() {

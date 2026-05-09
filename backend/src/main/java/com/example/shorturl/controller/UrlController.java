@@ -3,6 +3,7 @@ package com.example.shorturl.controller;
 import com.example.shorturl.common.exception.BusinessException;
 import com.example.shorturl.common.response.ApiResponse;
 import com.example.shorturl.common.response.ResponseStatus;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.service.UrlService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -10,7 +11,6 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -44,8 +44,7 @@ public class UrlController {
 
     private final UrlService urlService;
 
-    @Value("${short-url.domain:https://short.ly}")
-    private String shortUrlDomain;
+    private final AppConfig appConfig;
 
     /**
      * 创建短网址
@@ -65,7 +64,7 @@ public class UrlController {
             );
 
             ShortUrlResult result = new ShortUrlResult();
-            result.setShortUrl(shortUrlDomain + "/" + shortKey);
+            result.setShortUrl(appConfig.getShortUrl().getDomain() + "/" + shortKey);
             result.setShortKey(shortKey);
             result.setOriginalUrl(request.getOriginalUrl());
             result.setTitle(request.getTitle());

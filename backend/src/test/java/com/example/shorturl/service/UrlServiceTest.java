@@ -2,6 +2,7 @@ package com.example.shorturl.service;
 
 import com.example.shorturl.common.exception.BusinessException;
 import com.example.shorturl.common.response.ResponseStatus;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.dao.AccessLogDao;
 import com.example.shorturl.dao.UrlMappingDao;
 import com.example.shorturl.model.entity.ShortUrlMapping;
@@ -14,7 +15,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -48,6 +48,9 @@ class UrlServiceTest {
     private StringRedisTemplate redisTemplate;
 
     @Mock
+    private AppConfig appConfig;
+
+    @Mock
     private ValueOperations<String, String> valueOperations;
 
     @InjectMocks
@@ -55,9 +58,16 @@ class UrlServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(urlService, "shortUrlDomain", "https://short.ly");
-        ReflectionTestUtils.setField(urlService, "cacheExpireDays", 7);
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOperations);
+        AppConfig.ShortUrl shortUrl = new AppConfig.ShortUrl();
+        shortUrl.setDomain("https://short.ly");
+        shortUrl.setCacheExpireDays(7);
+        AppConfig.Pagination pagination = new AppConfig.Pagination();
+        pagination.setDefaultPage(1);
+        pagination.setDefaultSize(20);
+        pagination.setMaxSize(200);
+        lenient().when(appConfig.getShortUrl()).thenReturn(shortUrl);
+        lenient().when(appConfig.getPagination()).thenReturn(pagination);
     }
 
     @Test
@@ -95,7 +105,7 @@ class UrlServiceTest {
         String result = urlService.getOriginalUrl("abc123");
 
         assertEquals("https://example.com/test", result);
-        verify(asyncLogService).updateClickCount("abc123");
+        verify(asyncLogService, never()).updateClickCount("abc123");
     }
 
     @Test

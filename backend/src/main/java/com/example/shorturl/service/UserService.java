@@ -2,9 +2,12 @@ package com.example.shorturl.service;
 
 import com.example.shorturl.common.exception.BusinessException;
 import com.example.shorturl.common.response.ResponseStatus;
+import com.example.shorturl.common.utils.PageUtils;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.dao.UserDao;
 import com.example.shorturl.model.entity.User;
 import com.example.shorturl.model.entity.table.UserTableDef;
+import com.mybatisflex.core.paginate.Page;
 import com.mybatisflex.core.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
@@ -23,13 +26,12 @@ import java.util.Optional;
 public class UserService {
     private static final String ROLE_ADMIN = "ADMIN";
     private static final String ROLE_USER = "USER";
-    private static final int DEFAULT_PAGE = 1;
-    private static final int DEFAULT_PAGE_SIZE = 20;
-
 
     private final UserDao userDao;
 
     private final PasswordEncoder passwordEncoder;
+
+    private final AppConfig appConfig;
 
     /**
      * 用户注册。
@@ -233,7 +235,12 @@ public class UserService {
     public List<User> getUserList(Integer page, Integer size, String keyword, String role, Integer status) {
         QueryWrapper queryWrapper = buildUserQuery(keyword, role, status);
         queryWrapper.orderBy(UserTableDef.USER.CREATED_TIME, false);
-        return paginate(userDao.selectListByQuery(queryWrapper), page, size);
+        Page<User> result = userDao.paginate(
+                PageUtils.safePage(page, appConfig.getPagination()),
+                PageUtils.safeSize(size, appConfig.getPagination()),
+                queryWrapper
+        );
+        return PageUtils.records(result);
     }
 
     @Transactional(readOnly = true)
@@ -284,31 +291,4 @@ public class UserService {
         return queryWrapper;
     }
 
-    private List<User> paginate(List<User> users, Integer page, Integer size) {
-        if (users == null || users.isEmpty()) {
-            return List.of();
-        }
-
-        int safePage = safePage(page);
-        int safeSize = safeSize(size);
-        int fromIndex = Math.max((safePage - 1) * safeSize, 0);
-        if (fromIndex >= users.size()) {
-            return List.of();
-        }
-
-        int toIndex = Math.min(fromIndex + safeSize, users.size());
-        return users.subList(fromIndex, toIndex);
-    }
-
-    private int safePage(Integer page) {
-        return Optional.ofNullable(page)
-                .filter(value -> value > 0)
-                .orElse(DEFAULT_PAGE);
-    }
-
-    private int safeSize(Integer size) {
-        return Optional.ofNullable(size)
-                .filter(value -> value > 0)
-                .orElse(DEFAULT_PAGE_SIZE);
-    }
 }

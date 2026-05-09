@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import com.example.shorturl.common.annotation.RequiresLog;
 import com.example.shorturl.common.response.ApiResponse;
 import com.example.shorturl.common.response.PageResult;
+import com.example.shorturl.common.utils.PageUtils;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.model.entity.UserOperationLog;
 import com.example.shorturl.service.OperationLogService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -22,11 +24,13 @@ public class AdminOperationLogController {
 
     private final OperationLogService operationLogService;
 
+    private final AppConfig appConfig;
+
     @RequiresLog(type = "QUERY", module = "SYSTEM_MONITOR", description = "查询操作日志")
     @GetMapping
     public ApiResponse<PageResult<UserOperationLog>> getOperationLogs(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String module,
             @RequestParam(required = false) String operationType,
@@ -35,7 +39,16 @@ public class AdminOperationLogController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
 
         return ApiResponse.success(
-                operationLogService.getOperationLogs(page, size, keyword, module, operationType, status, startDate, endDate)
+                operationLogService.getOperationLogs(
+                        PageUtils.safePage(page, appConfig.getPagination()),
+                        PageUtils.safeSize(size, appConfig.getPagination()),
+                        keyword,
+                        module,
+                        operationType,
+                        status,
+                        startDate,
+                        endDate
+                )
         );
     }
 

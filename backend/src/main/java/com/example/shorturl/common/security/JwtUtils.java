@@ -1,11 +1,12 @@
 package com.example.shorturl.common.security;
 
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.model.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
@@ -33,13 +34,10 @@ import java.util.function.Function;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class JwtUtils {
 
-    @Value("${jwt.secret}")
-    private String secret;
-
-    @Value("${jwt.expiration}")
-    private Long expiration;
+    private final AppConfig appConfig;
 
     /**
      * 从Token中提取用户名
@@ -81,7 +79,7 @@ public class JwtUtils {
      * 提取Token中的所有Claims
      */
     private Claims extractAllClaims(String token) {
-        return Jwts.parser().setSigningKey(secret).parseClaimsJws(token).getBody();
+        return Jwts.parser().setSigningKey(appConfig.getJwt().getSecret()).parseClaimsJws(token).getBody();
     }
 
     /**
@@ -124,8 +122,8 @@ public class JwtUtils {
                 .setClaims(claims)
                 .setSubject(subject)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .setExpiration(new Date(System.currentTimeMillis() + appConfig.getJwt().getExpiration()))
+                .signWith(SignatureAlgorithm.HS512, appConfig.getJwt().getSecret())
                 .compact();
     }
 
@@ -142,7 +140,7 @@ public class JwtUtils {
      */
     public Boolean validateToken(String token) {
         try {
-            Jwts.parser().setSigningKey(secret).parseClaimsJws(token);
+            Jwts.parser().setSigningKey(appConfig.getJwt().getSecret()).parseClaimsJws(token);
             return !isTokenExpired(token);
         } catch (Exception e) {
             log.error("Token验证失败: {}", e.getMessage());
@@ -155,7 +153,7 @@ public class JwtUtils {
      */
     public String refreshToken(String token) {
         final Date createdDate = new Date();
-        final Date expirationDate = new Date(createdDate.getTime() + expiration);
+        final Date expirationDate = new Date(createdDate.getTime() + appConfig.getJwt().getExpiration());
 
         final Claims claims = extractAllClaims(token);
         claims.setIssuedAt(createdDate);
@@ -163,7 +161,7 @@ public class JwtUtils {
 
         return Jwts.builder()
                 .setClaims(claims)
-                .signWith(SignatureAlgorithm.HS512, secret)
+                .signWith(SignatureAlgorithm.HS512, appConfig.getJwt().getSecret())
                 .compact();
     }
 

@@ -157,8 +157,7 @@ const handleLogin = async () => {
 /**
  * 处理登录失败（表单验证失败）
  */
-const handleLoginFailed = (errorInfo) => {
-  console.log('表单验证失败:', errorInfo)
+const handleLoginFailed = () => {
   message.warning('请检查输入信息')
 }
 

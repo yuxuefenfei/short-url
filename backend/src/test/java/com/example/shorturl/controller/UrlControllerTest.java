@@ -2,8 +2,10 @@ package com.example.shorturl.controller;
 
 import com.example.shorturl.common.exception.BusinessException;
 import com.example.shorturl.common.response.ResponseStatus;
+import com.example.shorturl.service.AsyncLogService;
 import com.example.shorturl.service.UrlService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -19,6 +21,7 @@ import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -39,6 +42,9 @@ class UrlControllerTest {
 
     @MockBean
     private UrlService urlService;
+
+    @MockBean
+    private AsyncLogService asyncLogService;
 
     @Test
     void testCreateShortUrlSuccess() throws Exception {
@@ -106,6 +112,8 @@ class UrlControllerTest {
         mockMvc.perform(get("/abc123"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(header().string("Location", "https://example.com/test"));
+
+        verify(asyncLogService).logUrlAccess(anyString(), any(HttpServletRequest.class));
     }
 
     @Test

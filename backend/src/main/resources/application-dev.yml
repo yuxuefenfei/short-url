@@ -32,7 +32,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASS}
+      password: ${REDIS_PASS:}
       database: 0
 
 # 开发环境特殊配置
@@ -43,15 +43,6 @@ logging:
     org.springframework.security: debug
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-
-# 开发环境JWT配置（较短的过期时间便于测试）
-jwt:
-  expiration: 3600000  # 1小时
-
-# 开发环境短网址配置
-short-url:
-  domain: http://localhost:8080
-  cache-expire-days: 1  # 开发环境缓存1天
 
 # 开发环境服务器配置
 server:
@@ -70,3 +61,10 @@ management:
       enabled: true
     prometheus:
       enabled: true
+
+app:
+  short-url:
+    domain: http://localhost:8080
+    cache-expire-days: 1
+  jwt:
+    expiration: 3600000

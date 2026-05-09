@@ -3,6 +3,8 @@ package com.example.shorturl.controller;
 import com.example.shorturl.common.annotation.RequiresLog;
 import com.example.shorturl.common.response.ApiResponse;
 import com.example.shorturl.common.response.PageResult;
+import com.example.shorturl.common.utils.PageUtils;
+import com.example.shorturl.config.AppConfig;
 import com.example.shorturl.model.entity.User;
 import com.example.shorturl.service.UrlService;
 import com.example.shorturl.service.UserService;
@@ -39,20 +41,24 @@ public class AdminController {
 
     private final OnlineUserService onlineUserService;
 
+    private final AppConfig appConfig;
+
     @RequiresLog(type = "QUERY", module = "USER_MANAGEMENT", description = "查询用户列表")
     @GetMapping("/users")
     public ApiResponse<PageResult<User>> getUserList(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String role,
             @RequestParam(required = false) Integer status) {
+        int safePage = PageUtils.safePage(page, appConfig.getPagination());
+        int safeSize = PageUtils.safeSize(size, appConfig.getPagination());
 
         PageResult<User> result = PageResult.of(
-                userService.getUserList(page, size, keyword, role, status),
+                userService.getUserList(safePage, safeSize, keyword, role, status),
                 userService.getUserCount(keyword, role, status),
-                page,
-                size
+                safePage,
+                safeSize
         );
         return ApiResponse.success(result);
     }

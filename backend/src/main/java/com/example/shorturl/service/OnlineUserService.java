@@ -1,9 +1,9 @@
 package com.example.shorturl.service;
 
 import com.example.shorturl.common.redis.RedisKeyConstants;
+import com.example.shorturl.config.AppConfig;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +23,7 @@ public class OnlineUserService {
 
     private final StringRedisTemplate redisTemplate;
 
-    @Value("${admin.online-user.ttl-seconds:1800}")
-    private long onlineUserTtlSeconds;
+    private final AppConfig appConfig;
 
     public void markUserOnline(Long userId) {
         if (userId == null) {
@@ -64,7 +63,7 @@ public class OnlineUserService {
     }
 
     private void cleanupExpired(long nowMillis) {
-        long expireBefore = nowMillis - (onlineUserTtlSeconds * 1000L);
+        long expireBefore = nowMillis - (appConfig.getAdmin().getOnlineUser().getTtlSeconds() * 1000L);
         redisTemplate.opsForZSet().removeRangeByScore(ONLINE_USER_ZSET_KEY, 0, expireBefore);
     }
 }

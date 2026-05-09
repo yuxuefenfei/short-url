@@ -243,7 +243,7 @@ const chartRef = ref(null)
 const chartInstance = ref(null)
 
 const queryForm = reactive({
-  shortKey: route.query.key || ''
+  shortKey: route.params.shortKey || route.query.key || ''
 })
 
 const handleResize = () => {
@@ -405,8 +405,9 @@ const getSourcePercent = (count) => {
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
-  if (route.query.key) {
-    queryForm.shortKey = route.query.key
+  const shortKey = route.params.shortKey || route.query.key
+  if (shortKey) {
+    queryForm.shortKey = shortKey
     handleQuery()
   }
 })

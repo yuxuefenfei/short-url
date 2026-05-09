@@ -106,12 +106,3 @@ app.config.globalProperties = {
 }
 
 app.mount('#app')
-
-if (import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    if ('performance' in window) {
-      const loadTime = performance.now()
-      console.log(`Application load time: ${loadTime}ms`)
-    }
-  })
-}

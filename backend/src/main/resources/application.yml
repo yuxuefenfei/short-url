@@ -6,9 +6,9 @@ spring:
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/short_url_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useServerPrepStmts=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&rewriteBatchedStatements=true
-    username: root
-    password: root123
+    url: ${DB_URL:jdbc:mysql://localhost:3306/short_url_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&useServerPrepStmts=true&cachePrepStmts=true&prepStmtCacheSize=250&prepStmtCacheSqlLimit=2048&rewriteBatchedStatements=true}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
     hikari:
       minimum-idle: 10
       maximum-pool-size: 50
@@ -22,8 +22,8 @@ spring:
   data:
     redis:
       host: localhost
-      port: 6380
-      password: RcsTRtCzV8qmj3y$Mk*E
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
       database: 0
       timeout: 3000ms
       client-type: lettuce
@@ -79,21 +79,6 @@ management:
     diskspace:
       enabled: true
 
-# JWT 配置
-jwt:
-  secret: mySecretKey123456789012345678901234567890
-  expiration: 86400000  # 24 小时
-
-# 短网址配置
-short-url:
-  key-length: 6
-  cache-expire-days: 7
-
-# 管理端监控配置
-admin:
-  online-user:
-    ttl-seconds: 1800
-
 # 服务器配置
 server:
   port: 8080
@@ -110,3 +95,58 @@ logging:
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
   file:
     name: logs/short-url.log
+
+app:
+  application:
+    name: short-url
+  server:
+    port: ${server.port}
+  short-url:
+    domain: https://short.ly
+    key-length: 6
+    cache-expire-days: 7
+  jwt:
+    secret: ${JWT_SECRET:change-me-to-a-long-random-secret-at-runtime}
+    expiration: 86400000
+  admin:
+    online-user:
+      ttl-seconds: 1800
+  pagination:
+    default-page: 1
+    default-size: 20
+    max-size: 200
+  dashboard:
+    default-trend-days: 7
+  security:
+    cors:
+      allowed-origins:
+        - http://localhost:5173
+        - http://localhost:3000
+        - https://short.ly
+        - https://*.short.ly
+      allowed-methods:
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - OPTIONS
+        - HEAD
+      allowed-headers:
+        - Authorization
+        - Content-Type
+        - Accept
+        - Origin
+        - User-Agent
+        - DNT
+        - Cache-Control
+        - X-Mx-ReqToken
+        - Keep-Alive
+        - X-Requested-With
+        - If-Modified-Since
+        - X-CustomHeader
+        - X-Request-ID
+      exposed-headers:
+        - Authorization
+        - X-Request-ID
+        - X-Response-Time
+      max-age: 3600

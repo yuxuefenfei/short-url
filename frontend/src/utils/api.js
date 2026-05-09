@@ -34,7 +34,7 @@ class ApiClient {
   }
 
   normalizeUrl(url) {
-    return url.startsWith('/api') ? url : `/api${url}`
+    return url.startsWith('/api') || url.startsWith('/health') ? url : `/api${url}`
   }
 }
 
@@ -44,9 +44,16 @@ export const api = {
   auth: {
     login: (data) => apiClient.post('/auth/login', data),
     register: (data) => apiClient.post('/auth/register', data),
-    refreshToken: () => apiClient.post('/auth/refresh-token'),
+    refreshToken: (token) =>
+      request({
+        url: '/api/auth/refresh-token',
+        method: 'post',
+        headers: {
+          'Refresh-Token': token
+        }
+      }),
     logout: () => apiClient.post('/auth/logout'),
-    getCurrentUser: () => apiClient.get('/auth/me')
+    getCurrentUser: () => apiClient.get('/auth/current-user')
   },
   url: {
     create: (data) => apiClient.post('/shorten', data),

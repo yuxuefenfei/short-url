@@ -1,3 +1,4 @@
+import { message as antMessage } from 'ant-design-vue'
 import { checkUsernameExists } from '@/api/auth'
 
 /**
@@ -111,13 +112,13 @@ export const debouncedUsernameCheck = debounceValidation(async (username) => {
 }, 500)
 
 export const showSuccessMessage = (message) => {
-  console.log('Success:', message)
+  antMessage.success(message)
 }
 
 export const showErrorMessage = (message) => {
-  console.error('Error:', message)
+  antMessage.error(message)
 }
 
 export const showWarningMessage = (message) => {
-  console.warn('Warning:', message)
+  antMessage.warning(message)
 }
