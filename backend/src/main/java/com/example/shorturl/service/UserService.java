@@ -71,7 +71,7 @@ public class UserService {
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(password));
         user.setEmail(email);
-        user.setRole(StringUtils.hasText(role) ? role : ROLE_USER);
+        user.setRole(normalizeRole(role));
         user.setStatus(1);
         user.setCreatedTime(LocalDateTime.now());
         user.setUpdatedTime(LocalDateTime.now());
@@ -130,16 +130,21 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public User getUserById(Long userId) {
-        return Optional.ofNullable(userId)
+        User user = Optional.ofNullable(userId)
                 .map(userDao::selectOneById)
                 .orElse(null);
+        if (user == null) {
+            throw new BusinessException(ResponseStatus.USER_NOT_EXIST);
+        }
+        return user;
     }
 
     @Transactional
     public void updateUserStatus(Long userId, Integer status) {
-        if (userId == null || status == null) {
+        if (userId == null) {
             throw new BusinessException(ResponseStatus.BAD_REQUEST.getCode(), "参数不能为空");
         }
+        validateStatus(status);
 
         User user = userDao.selectOneById(userId);
         if (user == null) {
@@ -177,8 +182,9 @@ public class UserService {
             updated = true;
         }
 
-        if (StringUtils.hasText(role) && !role.equals(user.getRole())) {
-            user.setRole(role);
+        String normalizedRole = StringUtils.hasText(role) ? normalizeRole(role) : null;
+        if (normalizedRole != null && !normalizedRole.equals(user.getRole())) {
+            user.setRole(normalizedRole);
             updated = true;
         }
 
@@ -278,17 +284,35 @@ public class UserService {
         QueryWrapper queryWrapper = QueryWrapper.create();
 
         if (StringUtils.hasText(keyword)) {
-            queryWrapper.where(UserTableDef.USER.USERNAME.like(keyword))
-                    .or(UserTableDef.USER.EMAIL.like(keyword));
+            queryWrapper.where(UserTableDef.USER.USERNAME.like(keyword)
+                    .or(UserTableDef.USER.EMAIL.like(keyword)));
         }
         if (StringUtils.hasText(role)) {
-            queryWrapper.and(UserTableDef.USER.ROLE.eq(role));
+            queryWrapper.and(UserTableDef.USER.ROLE.eq(normalizeRole(role)));
         }
         if (status != null) {
+            validateStatus(status);
             queryWrapper.and(UserTableDef.USER.STATUS.eq(status));
         }
 
         return queryWrapper;
+    }
+
+    private String normalizeRole(String role) {
+        if (!StringUtils.hasText(role)) {
+            return ROLE_USER;
+        }
+        String normalized = role.trim().toUpperCase();
+        if (!ROLE_ADMIN.equals(normalized) && !ROLE_USER.equals(normalized)) {
+            throw new BusinessException(ResponseStatus.BAD_REQUEST.getCode(), "用户角色只能为 ADMIN 或 USER");
+        }
+        return normalized;
+    }
+
+    private void validateStatus(Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ResponseStatus.BAD_REQUEST.getCode(), "用户状态只能为 0 或 1");
+        }
     }
 
 }

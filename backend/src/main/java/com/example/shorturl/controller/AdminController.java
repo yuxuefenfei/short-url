@@ -11,6 +11,7 @@ import com.example.shorturl.service.UserService;
 import com.example.shorturl.service.OnlineUserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,7 @@ public class AdminController {
 
     @RequiresLog(type = "QUERY", module = "USER_MANAGEMENT", description = "查询用户列表")
     @GetMapping("/users")
-    public ApiResponse<PageResult<User>> getUserList(
+    public ApiResponse<PageResult<UserView>> getUserList(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size,
             @RequestParam(required = false) String keyword,
@@ -54,8 +55,11 @@ public class AdminController {
         int safePage = PageUtils.safePage(page, appConfig.getPagination());
         int safeSize = PageUtils.safeSize(size, appConfig.getPagination());
 
-        PageResult<User> result = PageResult.of(
-                userService.getUserList(safePage, safeSize, keyword, role, status),
+        PageResult<UserView> result = PageResult.of(
+                userService.getUserList(safePage, safeSize, keyword, role, status)
+                        .stream()
+                        .map(this::toUserView)
+                        .toList(),
                 userService.getUserCount(keyword, role, status),
                 safePage,
                 safeSize
@@ -65,20 +69,20 @@ public class AdminController {
 
     @RequiresLog(type = "CREATE", module = "USER_MANAGEMENT", description = "创建用户")
     @PostMapping("/users")
-    public ApiResponse<User> createUser(@Valid @RequestBody CreateUserRequest request) {
+    public ApiResponse<UserView> createUser(@Valid @RequestBody CreateUserRequest request) {
         User user = userService.registerUser(
                 request.getUsername(),
                 request.getPassword(),
                 request.getEmail(),
                 request.getRole()
         );
-        return ApiResponse.success("用户创建成功", user);
+        return ApiResponse.success("用户创建成功", toUserView(user));
     }
 
     @RequiresLog(type = "QUERY", module = "USER_MANAGEMENT", description = "查询用户详情")
     @GetMapping("/users/{userId}")
-    public ApiResponse<User> getUserDetail(@PathVariable Long userId) {
-        return ApiResponse.success(userService.getUserById(userId));
+    public ApiResponse<UserView> getUserDetail(@PathVariable Long userId) {
+        return ApiResponse.success(toUserView(userService.getUserById(userId)));
     }
 
     @RequiresLog(type = "UPDATE", module = "USER_MANAGEMENT", description = "更新用户状态")
@@ -91,9 +95,9 @@ public class AdminController {
 
     @RequiresLog(type = "UPDATE", module = "USER_MANAGEMENT", description = "更新用户信息")
     @PutMapping("/users/{userId}")
-    public ApiResponse<User> updateUserInfo(@PathVariable @NotNull Long userId,
-                                            @Valid @RequestBody UpdateUserRequest request) {
-        return ApiResponse.success(userService.updateUserInfo(userId, request.getEmail(), request.getRole()));
+    public ApiResponse<UserView> updateUserInfo(@PathVariable @NotNull Long userId,
+                                                @Valid @RequestBody UpdateUserRequest request) {
+        return ApiResponse.success(toUserView(userService.updateUserInfo(userId, request.getEmail(), request.getRole())));
     }
 
     @RequiresLog(type = "UPDATE", module = "USER_MANAGEMENT", description = "重置用户密码")
@@ -166,5 +170,31 @@ public class AdminController {
         private Long todayClicks;
         private LocalDateTime systemStartTime;
         private String version;
+    }
+
+    @Data
+    @Builder
+    public static class UserView {
+        private Long id;
+        private String username;
+        private String email;
+        private String role;
+        private Integer status;
+        private LocalDateTime lastLoginTime;
+        private LocalDateTime createdTime;
+        private LocalDateTime updatedTime;
+    }
+
+    private UserView toUserView(User user) {
+        return UserView.builder()
+                .id(user.getId())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .status(user.getStatus())
+                .lastLoginTime(user.getLastLoginTime())
+                .createdTime(user.getCreatedTime())
+                .updatedTime(user.getUpdatedTime())
+                .build();
     }
 }

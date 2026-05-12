@@ -77,10 +77,10 @@ public class OperationLogService {
         QueryWrapper queryWrapper = QueryWrapper.create();
 
         if (StringUtils.hasText(keyword)) {
-            queryWrapper.where(UserOperationLogTableDef.USER_OPERATION_LOG.OPERATION_DESC.like(keyword))
+            queryWrapper.where(UserOperationLogTableDef.USER_OPERATION_LOG.OPERATION_DESC.like(keyword)
                     .or(UserOperationLogTableDef.USER_OPERATION_LOG.MODULE.like(keyword))
                     .or(UserOperationLogTableDef.USER_OPERATION_LOG.OPERATION_TYPE.like(keyword))
-                    .or(UserOperationLogTableDef.USER_OPERATION_LOG.IP_ADDRESS.like(keyword));
+                    .or(UserOperationLogTableDef.USER_OPERATION_LOG.IP_ADDRESS.like(keyword)));
         }
 
         if (StringUtils.hasText(module)) {
