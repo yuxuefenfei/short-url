@@ -82,7 +82,11 @@
       <a-col :xs="24" :lg="16">
         <a-card title="访问趋势" :bordered="false" class="chart-card">
           <template #extra>
-            <a-radio-group v-model:value="trendPeriod" size="small" @change="loadDashboardData">
+            <a-radio-group
+              v-model:value="trendPeriod"
+              size="small"
+              @change="loadDashboardData"
+            >
               <a-radio-button value="7">7天</a-radio-button>
               <a-radio-button value="30">30天</a-radio-button>
               <a-radio-button value="90">90天</a-radio-button>
@@ -98,15 +102,22 @@
           <a-list v-else :data-source="hotUrls" class="hot-urls-list">
             <template #renderItem="{ item, index }">
               <a-list-item class="hot-url-item">
-                <div class="rank-badge" :class="[`rank-${index + 1}`]">{{ index + 1 }}</div>
+                <div class="rank-badge" :class="[`rank-${index + 1}`]">
+                  {{ index + 1 }}
+                </div>
                 <div class="url-info">
                   <div class="short-url">
-                    <a :href="item.shortUrl" target="_blank" rel="noreferrer" @click.prevent="copyUrl(item.shortUrl)">
+                    <a
+                      :href="item.shortUrl"
+                      target="_blank"
+                      rel="noreferrer"
+                      @click.prevent="copyUrl(item.shortUrl)"
+                    >
                       {{ item.shortKey }}
                     </a>
                   </div>
                   <div class="url-title" :title="item.title || ''">
-                    {{ item.title || '未设置标题' }}
+                    {{ item.title || "未设置标题" }}
                   </div>
                 </div>
                 <div class="click-count">
@@ -133,9 +144,13 @@
                     <span class="short-key">{{ item.shortKey }}</span>
                   </div>
                   <div class="activity-meta">
-                    <span class="ip-address">{{ item.ipAddress || '未知 IP' }}</span>
+                    <span class="ip-address">{{
+                      item.ipAddress || "未知 IP"
+                    }}</span>
                     <span class="separator">|</span>
-                    <span class="access-time">{{ formatTime(item.accessTime) }}</span>
+                    <span class="access-time">{{
+                      formatTime(item.accessTime)
+                    }}</span>
                   </div>
                 </div>
                 <div class="activity-action">
@@ -186,8 +201,15 @@
             <div class="metric-item">
               <div class="metric-label">网络延迟</div>
               <div class="metric-value latency">
-                <span class="latency-value">{{ systemMetrics.networkLatency }}ms</span>
-                <span :class="['latency-status', getLatencyStatus(systemMetrics.networkLatency)]">
+                <span class="latency-value"
+                  >{{ systemMetrics.networkLatency }}ms</span
+                >
+                <span
+                  :class="[
+                    'latency-status',
+                    getLatencyStatus(systemMetrics.networkLatency),
+                  ]"
+                >
                   {{ getLatencyLabel(systemMetrics.networkLatency) }}
                 </span>
               </div>
@@ -196,9 +218,15 @@
 
           <div class="system-info">
             <a-descriptions size="small" :column="1">
-              <a-descriptions-item label="系统版本">{{ stats.version || 'v1.0.0' }}</a-descriptions-item>
-              <a-descriptions-item label="启动时间">{{ formatDateTime(stats.systemStartTime) }}</a-descriptions-item>
-              <a-descriptions-item label="运行时长">{{ systemUptime }}</a-descriptions-item>
+              <a-descriptions-item label="系统版本">{{
+                stats.version || "v1.0.0"
+              }}</a-descriptions-item>
+              <a-descriptions-item label="启动时间">{{
+                formatDateTime(stats.systemStartTime)
+              }}</a-descriptions-item>
+              <a-descriptions-item label="运行时长">{{
+                systemUptime
+              }}</a-descriptions-item>
             </a-descriptions>
           </div>
         </a-card>
@@ -208,22 +236,22 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
+import { useRouter } from "vue-router";
+import { message } from "ant-design-vue";
 import {
   ArrowUpOutlined,
   CheckCircleOutlined,
   EyeOutlined,
   HeartOutlined,
   LinkOutlined,
-  UserOutlined
-} from '@ant-design/icons-vue'
-import echarts from '@/utils/echarts'
-import { getDashboardOverview, getSystemStats } from '@/api/admin'
-import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
+  UserOutlined,
+} from "@ant-design/icons-vue";
+import echarts from "@/utils/echarts";
+import { getDashboardOverview, getSystemStats } from "@/api/admin";
+import AdminPageHeader from "@/components/admin/AdminPageHeader.vue";
 
-const router = useRouter()
+const router = useRouter();
 
 const stats = reactive({
   totalUrls: 0,
@@ -233,229 +261,230 @@ const stats = reactive({
   totalUsers: 0,
   onlineUsers: 0,
   systemStartTime: null,
-  version: ''
-})
+  version: "",
+});
 
-const trendChartRef = ref(null)
-const trendChart = ref(null)
-const trendPeriod = ref('7')
-const hotUrls = ref([])
-const recentAccess = ref([])
+const trendChartRef = ref(null);
+const trendChart = ref(null);
+const trendPeriod = ref("7");
+const hotUrls = ref([]);
+const recentAccess = ref([]);
 const systemMetrics = reactive({
   cpuUsage: 0,
   memoryUsage: 0,
   diskUsage: 0,
-  networkLatency: 0
-})
+  networkLatency: 0,
+});
 
 const systemUptime = computed(() => {
   if (!stats.systemStartTime) {
-    return '0 分钟'
+    return "0 分钟";
   }
 
-  const now = new Date()
-  const start = new Date(stats.systemStartTime)
-  const diffMs = Math.max(now.getTime() - start.getTime(), 0)
-  const diffMinutes = Math.floor(diffMs / 60000)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
+  const now = new Date();
+  const start = new Date(stats.systemStartTime);
+  const diffMs = Math.max(now.getTime() - start.getTime(), 0);
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
 
   if (diffDays > 0) {
-    return `${diffDays} 天 ${diffHours % 24} 小时`
+    return `${diffDays} 天 ${diffHours % 24} 小时`;
   }
   if (diffHours > 0) {
-    return `${diffHours} 小时 ${diffMinutes % 60} 分钟`
+    return `${diffHours} 小时 ${diffMinutes % 60} 分钟`;
   }
-  return `${diffMinutes} 分钟`
-})
+  return `${diffMinutes} 分钟`;
+});
 
 const ensureChart = () => {
   if (!trendChart.value && trendChartRef.value) {
-    trendChart.value = echarts.init(trendChartRef.value)
+    trendChart.value = echarts.init(trendChartRef.value);
   }
-}
+};
 
 const updateTrendChart = (trend = {}) => {
-  ensureChart()
+  ensureChart();
   if (!trendChart.value) {
-    return
+    return;
   }
 
   trendChart.value.setOption({
     tooltip: {
-      trigger: 'axis',
+      trigger: "axis",
       axisPointer: {
-        type: 'cross'
-      }
+        type: "cross",
+      },
     },
     legend: {
-      data: ['访问量', '新增短链']
+      data: ["访问量", "新增短链"],
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
+      left: "3%",
+      right: "4%",
+      bottom: "3%",
+      containLabel: true,
     },
     xAxis: {
-      type: 'category',
+      type: "category",
       boundaryGap: false,
-      data: trend.dates || []
+      data: trend.dates || [],
     },
     yAxis: [
       {
-        type: 'value',
-        name: '访问量'
+        type: "value",
+        name: "访问量",
       },
       {
-        type: 'value',
-        name: '新增数量'
-      }
+        type: "value",
+        name: "新增数量",
+      },
     ],
     series: [
       {
-        name: '访问量',
-        type: 'line',
+        name: "访问量",
+        type: "line",
         smooth: true,
         yAxisIndex: 0,
         data: trend.clicks || [],
         lineStyle: {
-          color: '#1890ff'
+          color: "#1890ff",
         },
         areaStyle: {
-          color: 'rgba(24, 144, 255, 0.12)'
-        }
+          color: "rgba(24, 144, 255, 0.12)",
+        },
       },
       {
-        name: '新增短链',
-        type: 'line',
+        name: "新增短链",
+        type: "line",
         smooth: true,
         yAxisIndex: 1,
         data: trend.newUrls || [],
         lineStyle: {
-          color: '#52c41a'
-        }
-      }
-    ]
-  })
-}
+          color: "#52c41a",
+        },
+      },
+    ],
+  });
+};
 
 const loadStats = async () => {
-  const response = await getSystemStats()
+  const response = await getSystemStats();
   if (response.code === 200) {
-    Object.assign(stats, response.data || {})
+    Object.assign(stats, response.data || {});
   }
-}
+};
 
 const loadDashboardData = async () => {
-  const response = await getDashboardOverview(Number(trendPeriod.value))
+  const response = await getDashboardOverview(Number(trendPeriod.value));
   if (response.code !== 200) {
-    return
+    return;
   }
 
-  const data = response.data || {}
-  updateTrendChart(data.trend)
-  hotUrls.value = data.hotUrls || []
-  recentAccess.value = data.recentAccess || []
-  Object.assign(systemMetrics, data.systemMetrics || {})
-}
+  const data = response.data || {};
+  updateTrendChart(data.trend);
+  hotUrls.value = data.hotUrls || [];
+  recentAccess.value = data.recentAccess || [];
+  Object.assign(systemMetrics, data.systemMetrics || {});
+};
 
 const refreshDashboard = async () => {
   try {
-    await Promise.all([loadStats(), loadDashboardData()])
+    await Promise.all([loadStats(), loadDashboardData()]);
   } catch (error) {
-    console.error('Failed to load dashboard data:', error)
-    message.error('加载数据看板失败')
+    console.error("Failed to load dashboard data:", error);
+    message.error("加载数据看板失败");
   }
-}
+};
 
 const getProgressStatus = (value) => {
-  if (value >= 80) return 'exception'
-  if (value >= 60) return 'active'
-  return 'normal'
-}
+  if (value >= 80) return "exception";
+  if (value >= 60) return "active";
+  return "normal";
+};
 
-const formatPercent = (percent) => `${Math.max(0, Math.min(100, Number(percent) || 0))}%`
+const formatPercent = (percent) =>
+  `${Math.max(0, Math.min(100, Number(percent) || 0))}%`;
 
 const getLatencyStatus = (latency) => {
-  if (latency < 50) return 'good'
-  if (latency < 100) return 'normal'
-  return 'poor'
-}
+  if (latency < 50) return "good";
+  if (latency < 100) return "normal";
+  return "poor";
+};
 
 const getLatencyLabel = (latency) => {
-  if (latency < 50) return '优秀'
-  if (latency < 100) return '良好'
-  return '较高'
-}
+  if (latency < 50) return "优秀";
+  if (latency < 100) return "良好";
+  return "较高";
+};
 
 const copyUrl = async (url) => {
   try {
-    await navigator.clipboard.writeText(url)
-    message.success('短链已复制到剪贴板')
+    await navigator.clipboard.writeText(url);
+    message.success("短链已复制到剪贴板");
   } catch (error) {
-    message.error('复制失败，请手动复制')
+    message.error("复制失败，请手动复制");
   }
-}
+};
 
 const viewUrlDetails = (shortKey) => {
-  router.push(`/admin/urls?key=${encodeURIComponent(shortKey)}`)
-}
+  router.push(`/admin/urls?key=${encodeURIComponent(shortKey)}`);
+};
 
 const formatTime = (time) => {
   if (!time) {
-    return '--'
+    return "--";
   }
 
-  const now = new Date()
-  const target = new Date(time)
-  const diffMinutes = Math.floor((now.getTime() - target.getTime()) / 60000)
-  const diffHours = Math.floor(diffMinutes / 60)
-  const diffDays = Math.floor(diffHours / 24)
+  const now = new Date();
+  const target = new Date(time);
+  const diffMinutes = Math.floor((now.getTime() - target.getTime()) / 60000);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
 
-  if (diffDays > 0) return `${diffDays} 天前`
-  if (diffHours > 0) return `${diffHours} 小时前`
-  if (diffMinutes > 0) return `${diffMinutes} 分钟前`
-  return '刚刚'
-}
+  if (diffDays > 0) return `${diffDays} 天前`;
+  if (diffHours > 0) return `${diffHours} 小时前`;
+  if (diffMinutes > 0) return `${diffMinutes} 分钟前`;
+  return "刚刚";
+};
 
 const formatDateTime = (dateTime) => {
   if (!dateTime) {
-    return '--'
+    return "--";
   }
-  return new Date(dateTime).toLocaleString()
-}
+  return new Date(dateTime).toLocaleString();
+};
 
-let refreshTimer = null
+let refreshTimer = null;
 
 const startAutoRefresh = () => {
   refreshTimer = window.setInterval(() => {
-    refreshDashboard()
-  }, 30000)
-}
+    refreshDashboard();
+  }, 30000);
+};
 
 const stopAutoRefresh = () => {
   if (refreshTimer) {
-    window.clearInterval(refreshTimer)
-    refreshTimer = null
+    window.clearInterval(refreshTimer);
+    refreshTimer = null;
   }
-}
+};
 
 const handleResize = () => {
-  trendChart.value?.resize()
-}
+  trendChart.value?.resize();
+};
 
 onMounted(async () => {
-  await refreshDashboard()
-  startAutoRefresh()
-  window.addEventListener('resize', handleResize)
-})
+  await refreshDashboard();
+  startAutoRefresh();
+  window.addEventListener("resize", handleResize);
+});
 
 onUnmounted(() => {
-  stopAutoRefresh()
-  window.removeEventListener('resize', handleResize)
-  trendChart.value?.dispose()
-})
+  stopAutoRefresh();
+  window.removeEventListener("resize", handleResize);
+  trendChart.value?.dispose();
+});
 </script>
 
 <style scoped>

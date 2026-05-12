@@ -13,16 +13,16 @@
 
           <a-form
             :model="loginForm"
-            @finish="handleLogin"
-            @finishFailed="handleLoginFailed"
             class="login-form"
             autocomplete="off"
+            @finish="handleLogin"
+            @finish-failed="handleLoginFailed"
           >
             <a-form-item
               name="username"
               :rules="[
                 { required: true, message: '请输入用户名' },
-                { min: 3, max: 50, message: '用户名长度必须在3-50个字符之间' }
+                { min: 3, max: 50, message: '用户名长度必须在3-50个字符之间' },
               ]"
             >
               <a-input
@@ -41,7 +41,7 @@
               name="password"
               :rules="[
                 { required: true, message: '请输入密码' },
-                { min: 6, message: '密码长度不能少于6个字符' }
+                { min: 6, message: '密码长度不能少于6个字符' },
               ]"
             >
               <a-input-password
@@ -49,7 +49,7 @@
                 placeholder="密码"
                 size="large"
                 autocomplete="current-password"
-                @pressEnter="handleLogin"
+                @press-enter="handleLogin"
               >
                 <template #prefix>
                   <LockOutlined class="input-icon" />
@@ -66,7 +66,7 @@
                 :loading="loading"
                 class="login-button"
               >
-                {{ loading ? '登录中...' : '登录' }}
+                {{ loading ? "登录中..." : "登录" }}
               </a-button>
             </a-form-item>
           </a-form>
@@ -81,12 +81,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { message } from 'ant-design-vue'
-import { UserOutlined, LockOutlined } from '@ant-design/icons-vue'
-import { login } from '@/api/auth'
+import { ref, reactive, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useUserStore } from "@/stores/user";
+import { message } from "ant-design-vue";
+import { UserOutlined, LockOutlined } from "@ant-design/icons-vue";
+import { login } from "@/api/auth";
 
 // 图标组件
 const LinkIcon = {
@@ -95,89 +95,89 @@ const LinkIcon = {
       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-  `
-}
+  `,
+};
 
-const router = useRouter()
-const route = useRoute()
-const userStore = useUserStore()
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
 
 // 登录表单数据
 const loginForm = reactive({
-  username: '',
-  password: ''
-})
+  username: "",
+  password: "",
+});
 
 // 加载状态
-const loading = ref(false)
+const loading = ref(false);
 
 /**
  * 处理登录提交
  */
 const handleLogin = async () => {
-  if (loading.value) return
+  if (loading.value) return;
 
-  loading.value = true
+  loading.value = true;
 
   try {
     // 调用登录API
     const response = await login({
       username: loginForm.username.trim(),
-      password: loginForm.password
-    })
-    const { token, refreshToken, userInfo } = response.data
+      password: loginForm.password,
+    });
+    const { token, refreshToken, userInfo } = response.data;
 
     // 保存用户信息到store
     userStore.login({
       token,
       refreshToken,
-      userInfo
-    })
+      userInfo,
+    });
 
-    message.success('登录成功！')
+    message.success("登录成功！");
 
     // 跳转到之前访问的页面或默认页面
-    const redirect = route.query.redirect || '/admin/dashboard'
-    router.push(redirect)
-
+    const redirect = route.query.redirect || "/admin/dashboard";
+    router.push(redirect);
   } catch (error) {
-    console.error('登录失败:', error)
+    console.error("登录失败:", error);
 
     // 显示错误信息
-    const errorMessage = error.response?.data?.message || '登录失败，请检查用户名和密码'
-    message.error(errorMessage)
+    const errorMessage =
+      error.response?.data?.message || "登录失败，请检查用户名和密码";
+    message.error(errorMessage);
 
     // 清空密码
-    loginForm.password = ''
+    loginForm.password = "";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 /**
  * 处理登录失败（表单验证失败）
  */
 const handleLoginFailed = () => {
-  message.warning('请检查输入信息')
-}
+  message.warning("请检查输入信息");
+};
 
 /**
  * 检查是否已登录
  */
 const checkLoginStatus = () => {
-  if (userStore.isLoggedIn && userStore.userInfo?.role === 'ADMIN') {
+  if (userStore.isLoggedIn && userStore.userInfo?.role === "ADMIN") {
     // 如果已登录且是管理员，跳转到管理页面
-    const redirect = route.query.redirect || '/admin/dashboard'
-    router.push(redirect)
+    const redirect = route.query.redirect || "/admin/dashboard";
+    router.push(redirect);
   }
-}
+};
 
 /**
  * 初始化
  */
 onMounted(() => {
-  checkLoginStatus()
-})
+  checkLoginStatus();
+});
 </script>
 
 <style scoped>

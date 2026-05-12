@@ -27,30 +27,30 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, ref } from "vue";
 
-const showQuickTips = ref(true)
-const showMaintenanceNotice = ref(false)
+const showQuickTips = ref(true);
+const showMaintenanceNotice = ref(false);
 
 const closeQuickTips = () => {
-  showQuickTips.value = false
-  localStorage.setItem('hideQuickTips', 'true')
-}
+  showQuickTips.value = false;
+  localStorage.setItem("hideQuickTips", "true");
+};
 
 const closeMaintenanceNotice = () => {
-  showMaintenanceNotice.value = false
-  localStorage.setItem('hideMaintenanceNotice', 'true')
-}
+  showMaintenanceNotice.value = false;
+  localStorage.setItem("hideMaintenanceNotice", "true");
+};
 
 onMounted(() => {
-  if (localStorage.getItem('hideQuickTips') === 'true') {
-    showQuickTips.value = false
+  if (localStorage.getItem("hideQuickTips") === "true") {
+    showQuickTips.value = false;
   }
 
-  if (localStorage.getItem('hideMaintenanceNotice') !== 'true') {
-    showMaintenanceNotice.value = false
+  if (localStorage.getItem("hideMaintenanceNotice") !== "true") {
+    showMaintenanceNotice.value = false;
   }
-})
+});
 </script>
 
 <style scoped>

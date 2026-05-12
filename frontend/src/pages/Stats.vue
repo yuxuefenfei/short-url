@@ -79,7 +79,9 @@
                     <ClockCircleOutlined />
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ formatDate(stats.createdTime) }}</div>
+                    <div class="stat-value">
+                      {{ formatDate(stats.createdTime) }}
+                    </div>
                     <div class="stat-label">创建日期</div>
                   </div>
                 </div>
@@ -93,7 +95,9 @@
                     <CheckCircleOutlined />
                   </div>
                   <div class="stat-info">
-                    <div class="stat-value">{{ getStatusText(stats.status) }}</div>
+                    <div class="stat-value">
+                      {{ getStatusText(stats.status) }}
+                    </div>
                     <div class="stat-label">当前状态</div>
                   </div>
                 </div>
@@ -162,14 +166,17 @@
               </div>
             </template>
 
-            <a-empty v-if="!accessSources.length" description="暂无来源分析数据" />
+            <a-empty
+              v-if="!accessSources.length"
+              description="暂无来源分析数据"
+            />
 
             <a-list v-else :data-source="accessSources" size="small">
               <template #renderItem="{ item }">
                 <a-list-item>
                   <a-list-item-meta>
                     <template #title>
-                      <span>{{ item.source || 'Unknown' }}</span>
+                      <span>{{ item.source || "Unknown" }}</span>
                     </template>
                     <template #description>
                       <span>访问次数：{{ item.count }}</span>
@@ -214,9 +221,9 @@
 </template>
 
 <script setup>
-import { nextTick, onMounted, onUnmounted, reactive, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import echarts from '@/utils/echarts'
+import { nextTick, onMounted, onUnmounted, reactive, ref } from "vue";
+import { useRoute } from "vue-router";
+import echarts from "@/utils/echarts";
 import {
   BarChartOutlined,
   CalendarOutlined,
@@ -229,193 +236,194 @@ import {
   LineChartOutlined,
   LinkOutlined,
   ReloadOutlined,
-  SearchOutlined
-} from '@ant-design/icons-vue'
-import { message } from 'ant-design-vue'
-import { getUrlStats } from '@/api/url'
+  SearchOutlined,
+} from "@ant-design/icons-vue";
+import { message } from "ant-design-vue";
+import { getUrlStats } from "@/api/url";
 
-const route = useRoute()
+const route = useRoute();
 
-const loading = ref(false)
-const stats = ref(null)
-const accessSources = ref([])
-const chartRef = ref(null)
-const chartInstance = ref(null)
+const loading = ref(false);
+const stats = ref(null);
+const accessSources = ref([]);
+const chartRef = ref(null);
+const chartInstance = ref(null);
 
 const queryForm = reactive({
-  shortKey: route.params.shortKey || route.query.key || ''
-})
+  shortKey: route.params.shortKey || route.query.key || "",
+});
 
 const handleResize = () => {
-  chartInstance.value?.resize()
-}
+  chartInstance.value?.resize();
+};
 
 const handleQuery = async () => {
   if (!queryForm.shortKey) {
-    message.warning('请输入短链 Key')
-    return
+    message.warning("请输入短链 Key");
+    return;
   }
 
-  await loadStats(queryForm.shortKey)
-}
+  await loadStats(queryForm.shortKey);
+};
 
 const resetQuery = () => {
-  queryForm.shortKey = ''
-  stats.value = null
-  accessSources.value = []
-  chartInstance.value?.dispose()
-  chartInstance.value = null
-}
+  queryForm.shortKey = "";
+  stats.value = null;
+  accessSources.value = [];
+  chartInstance.value?.dispose();
+  chartInstance.value = null;
+};
 
 const loadStats = async (shortKey) => {
   try {
-    loading.value = true
-    const response = await getUrlStats(shortKey)
+    loading.value = true;
+    const response = await getUrlStats(shortKey);
     if (response.code !== 200) {
-      return
+      return;
     }
 
-    stats.value = response.data
-    accessSources.value = response.data?.accessSources || []
+    stats.value = response.data;
+    accessSources.value = response.data?.accessSources || [];
 
-    await nextTick()
-    renderChart()
-    message.success('统计数据加载成功')
+    await nextTick();
+    renderChart();
+    message.success("统计数据加载成功");
   } catch (error) {
-    console.error('Failed to load stats:', error)
-    message.error(error?.message || '加载统计数据失败')
+    console.error("Failed to load stats:", error);
+    message.error(error?.message || "加载统计数据失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const refreshStats = async () => {
   if (stats.value?.shortKey) {
-    await loadStats(stats.value.shortKey)
+    await loadStats(stats.value.shortKey);
   }
-}
+};
 
 const renderChart = () => {
   if (!chartRef.value || !stats.value) {
-    return
+    return;
   }
 
-  chartInstance.value?.dispose()
-  chartInstance.value = echarts.init(chartRef.value)
+  chartInstance.value?.dispose();
+  chartInstance.value = echarts.init(chartRef.value);
 
-  const trend = stats.value.trend || []
+  const trend = stats.value.trend || [];
   chartInstance.value.setOption({
     tooltip: {
-      trigger: 'axis',
-      formatter: '{b}<br/>访问次数: {c}'
+      trigger: "axis",
+      formatter: "{b}<br/>访问次数: {c}",
     },
     grid: {
-      left: '3%',
-      right: '4%',
-      bottom: '3%',
-      containLabel: true
+      left: "3%",
+      right: "4%",
+      bottom: "3%",
+      containLabel: true,
     },
     xAxis: {
-      type: 'category',
+      type: "category",
       boundaryGap: false,
-      data: trend.map((item) => item.date)
+      data: trend.map((item) => item.date),
     },
     yAxis: {
-      type: 'value',
-      minInterval: 1
+      type: "value",
+      minInterval: 1,
     },
     series: [
       {
-        name: '访问次数',
-        type: 'line',
+        name: "访问次数",
+        type: "line",
         smooth: true,
         data: trend.map((item) => item.clicks),
         lineStyle: {
-          color: '#1890ff',
-          width: 2
+          color: "#1890ff",
+          width: 2,
         },
         itemStyle: {
-          color: '#1890ff'
+          color: "#1890ff",
         },
         areaStyle: {
-          color: 'rgba(24, 144, 255, 0.12)'
-        }
-      }
-    ]
-  })
-}
+          color: "rgba(24, 144, 255, 0.12)",
+        },
+      },
+    ],
+  });
+};
 
 const exportStats = () => {
   if (!stats.value) {
-    return
+    return;
   }
 
   const data = {
     ...stats.value,
-    exportTime: new Date().toISOString()
-  }
+    exportTime: new Date().toISOString(),
+  };
 
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `stats-${stats.value.shortKey}-${new Date().toISOString().split('T')[0]}.json`
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `stats-${stats.value.shortKey}-${new Date().toISOString().split("T")[0]}.json`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 
-  message.success('统计报告已导出')
-}
+  message.success("统计报告已导出");
+};
 
 const openShortUrl = (url) => {
-  window.open(url, '_blank', 'noopener,noreferrer')
-}
-
+  window.open(url, "_blank", "noopener,noreferrer");
+};
 
 const formatDate = (dateTime) => {
-  if (!dateTime) return '-'
-  return new Date(dateTime).toLocaleDateString('zh-CN')
-}
+  if (!dateTime) return "-";
+  return new Date(dateTime).toLocaleDateString("zh-CN");
+};
 
 const formatDateTime = (dateTime) => {
-  if (!dateTime) return '-'
-  return new Date(dateTime).toLocaleString('zh-CN')
-}
+  if (!dateTime) return "-";
+  return new Date(dateTime).toLocaleString("zh-CN");
+};
 
 const getStatusText = (status) => {
-  if (status === 1) return '正常'
-  if (status === 0) return '禁用'
-  return '未知'
-}
+  if (status === 1) return "正常";
+  if (status === 0) return "禁用";
+  return "未知";
+};
 
 const getStatusColor = (status) => {
-  if (status === 1) return 'success'
-  if (status === 0) return 'error'
-  return 'default'
-}
+  if (status === 1) return "success";
+  if (status === 0) return "error";
+  return "default";
+};
 
 const getSourcePercent = (count) => {
-  const total = stats.value?.totalClicks || 0
+  const total = stats.value?.totalClicks || 0;
   if (!total) {
-    return '0.0'
+    return "0.0";
   }
-  return ((count / total) * 100).toFixed(1)
-}
+  return ((count / total) * 100).toFixed(1);
+};
 
 onMounted(() => {
-  window.addEventListener('resize', handleResize)
-  const shortKey = route.params.shortKey || route.query.key
+  window.addEventListener("resize", handleResize);
+  const shortKey = route.params.shortKey || route.query.key;
   if (shortKey) {
-    queryForm.shortKey = shortKey
-    handleQuery()
+    queryForm.shortKey = shortKey;
+    handleQuery();
   }
-})
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  chartInstance.value?.dispose()
-})
+  window.removeEventListener("resize", handleResize);
+  chartInstance.value?.dispose();
+});
 </script>
 
 <style scoped>
@@ -605,4 +613,3 @@ onUnmounted(() => {
   }
 }
 </style>
-

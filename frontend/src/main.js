@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp } from "vue";
 import {
   Alert,
   Avatar,
@@ -27,19 +27,19 @@ import {
   Spin,
   Table,
   Tag,
-  Tooltip
-} from 'ant-design-vue'
-import 'ant-design-vue/dist/reset.css'
-import App from './App.vue'
-import router from './router'
-import { createPinia } from 'pinia'
-import './assets/styles/global.css'
+  Tooltip,
+} from "ant-design-vue";
+import "ant-design-vue/dist/reset.css";
+import App from "./App.vue";
+import router from "./router";
+import { createPinia } from "pinia";
+import "./assets/styles/global.css";
 
-const app = createApp(App)
-const pinia = createPinia()
+const app = createApp(App);
+const pinia = createPinia();
 
-app.use(pinia)
-app.use(router)
+app.use(pinia);
+app.use(router);
 
 const components = [
   Alert,
@@ -86,23 +86,23 @@ const components = [
   Spin,
   Table,
   Tag,
-  Tooltip
-]
+  Tooltip,
+];
 
 components.forEach((component) => {
   if (component?.name) {
-    app.component(component.name, component)
+    app.component(component.name, component);
   }
-})
+});
 
 app.config.errorHandler = (err, instance, info) => {
-  console.error('Vue application error:', err)
-  console.error('Error info:', info)
-}
+  console.error("Vue application error:", err);
+  console.error("Error info:", info);
+};
 
 app.config.globalProperties = {
-  appVersion: '1.0.0',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '/api'
-}
+  appVersion: "1.0.0",
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "/api",
+};
 
-app.mount('#app')
+app.mount("#app");

@@ -16,14 +16,14 @@
       </div>
 
       <!-- 加载文本 -->
-      <div class="loading-text">{{ loadingTip || '加载中...' }}</div>
+      <div class="loading-text">{{ loadingTip || "加载中..." }}</div>
 
       <!-- 进度条（可选） -->
-      <div v-if="showProgress" class="loading-progress">
+      <div v-if="displayProgress" class="loading-progress">
         <a-progress
-          :percent="progress"
-          :showInfo="false"
-          strokeColor="#1890ff"
+          :percent="progressPercent"
+          :show-info="false"
+          stroke-color="#1890ff"
         />
       </div>
     </div>
@@ -31,94 +31,101 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
-import { useUrlStore } from '@/stores/url'
-import { useUserStore } from '@/stores/user'
+import { ref, computed, watch } from "vue";
+import { useUrlStore } from "@/stores/url";
 
 // Props
 const props = defineProps({
   // 是否显示加载遮罩
   visible: {
     type: Boolean,
-    default: false
+    default: false,
   },
 
   // 加载提示文本
   tip: {
     type: String,
-    default: ''
+    default: "",
   },
 
   // 是否显示进度条
   showProgress: {
     type: Boolean,
-    default: false
+    default: false,
   },
 
   // 进度百分比
   progress: {
     type: Number,
     default: 0,
-    validator: (value) => value >= 0 && value <= 100
-  }
-})
+    validator: (value) => value >= 0 && value <= 100,
+  },
+});
 
 // 状态管理
-const urlStore = useUrlStore()
-const userStore = useUserStore()
+const urlStore = useUrlStore();
 
 // 响应式数据
-const localVisible = ref(props.visible)
-const localTip = ref(props.tip)
-const localProgress = ref(props.progress)
+const localVisible = ref(props.visible);
+const localTip = ref(props.tip);
+const localProgress = ref(props.progress);
 
 // 计算属性
 const isLoading = computed(() => {
-  return localVisible.value || urlStore.isLoading
-})
+  return localVisible.value || urlStore.isLoading;
+});
 
 const loadingTip = computed(() => {
-  return localTip.value || '加载中...'
-})
+  return localTip.value || "加载中...";
+});
 
-const showProgress = computed(() => {
-  return props.showProgress
-})
+const displayProgress = computed(() => {
+  return props.showProgress;
+});
 
-const progress = computed(() => {
-  return localProgress.value
-})
+const progressPercent = computed(() => {
+  return localProgress.value;
+});
 
 // 监听Props变化
-watch(() => props.visible, (newValue) => {
-  localVisible.value = newValue
-})
+watch(
+  () => props.visible,
+  (newValue) => {
+    localVisible.value = newValue;
+  },
+);
 
-watch(() => props.tip, (newValue) => {
-  localTip.value = newValue
-})
+watch(
+  () => props.tip,
+  (newValue) => {
+    localTip.value = newValue;
+  },
+);
 
-watch(() => props.progress, (newValue) => {
-  localProgress.value = newValue
-})
+watch(
+  () => props.progress,
+  (newValue) => {
+    localProgress.value = newValue;
+  },
+);
 
 // 暴露方法给父组件
 defineExpose({
-  show: (tip = '') => {
-    localTip.value = tip
-    localVisible.value = true
+  show: (tip = "") => {
+    localTip.value = tip;
+    localVisible.value = true;
   },
 
   hide: () => {
-    localVisible.value = false
-    localTip.value = ''
-    localProgress.value = 0
+    localVisible.value = false;
+    localTip.value = "";
+    localProgress.value = 0;
   },
 
   updateProgress: (percent) => {
-    localProgress.value = Math.max(0, Math.min(100, percent))
-  }
-})
+    localProgress.value = Math.max(0, Math.min(100, percent));
+  },
+});
 </script>
 
 <style scoped>

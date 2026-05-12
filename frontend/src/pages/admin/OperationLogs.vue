@@ -1,9 +1,6 @@
 <template>
   <div class="operation-logs">
-    <AdminPageHeader
-      title="操作日志"
-      subtitle="查看系统操作记录与审计信息"
-    />
+    <AdminPageHeader title="操作日志" subtitle="查看系统操作记录与审计信息" />
 
     <a-card class="filter-card">
       <a-row :gutter="[16, 16]">
@@ -162,10 +159,17 @@
         <template #bodyCell="{ column, record }">
           <template v-if="column.key === 'username'">
             <div class="user-cell">
-              <a-avatar :style="{ backgroundColor: getAvatarColor(record.username || '?') }" size="small">
-                {{ (record.username || '?').charAt(0).toUpperCase() }}
+              <a-avatar
+                :style="{
+                  backgroundColor: getAvatarColor(record.username || '?'),
+                }"
+                size="small"
+              >
+                {{ (record.username || "?").charAt(0).toUpperCase() }}
               </a-avatar>
-              <span class="username">{{ record.username || `用户#${record.userId || '-'}` }}</span>
+              <span class="username">{{
+                record.username || `用户#${record.userId || "-"}`
+              }}</span>
             </div>
           </template>
 
@@ -183,14 +187,17 @@
 
           <template v-else-if="column.key === 'status'">
             <a-tag :color="record.status === 1 ? 'success' : 'error'">
-              {{ record.status === 1 ? '成功' : '失败' }}
+              {{ record.status === 1 ? "成功" : "失败" }}
             </a-tag>
           </template>
 
           <template v-else-if="column.key === 'ipAddress'">
             <div class="ip-cell">
-              <span class="ip">{{ record.ipAddress || '-' }}</span>
-              <a-tooltip v-if="record.ipAddress" :title="`地区标签：${getIpLocation(record.ipAddress)}`">
+              <span class="ip">{{ record.ipAddress || "-" }}</span>
+              <a-tooltip
+                v-if="record.ipAddress"
+                :title="`地区标签：${getIpLocation(record.ipAddress)}`"
+              >
                 <EnvironmentOutlined class="location-icon" />
               </a-tooltip>
             </div>
@@ -199,7 +206,9 @@
           <template v-else-if="column.key === 'operationTime'">
             <div class="time-cell">
               <div>{{ formatDateTime(record.operationTime) }}</div>
-              <div class="time-ago">{{ formatTimeAgo(record.operationTime) }}</div>
+              <div class="time-ago">
+                {{ formatTimeAgo(record.operationTime) }}
+              </div>
             </div>
           </template>
 
@@ -222,9 +231,15 @@
     >
       <div v-if="selectedLog" class="detail-content">
         <a-descriptions bordered :column="1">
-          <a-descriptions-item label="日志 ID">{{ selectedLog.id }}</a-descriptions-item>
-          <a-descriptions-item label="用户 ID">{{ selectedLog.userId || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="用户名">{{ selectedLog.username || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="日志 ID">{{
+            selectedLog.id
+          }}</a-descriptions-item>
+          <a-descriptions-item label="用户 ID">{{
+            selectedLog.userId || "-"
+          }}</a-descriptions-item>
+          <a-descriptions-item label="用户名">{{
+            selectedLog.username || "-"
+          }}</a-descriptions-item>
           <a-descriptions-item label="操作类型">
             <a-tag :color="getOperationTypeColor(selectedLog.operationType)">
               {{ getOperationTypeLabel(selectedLog.operationType) }}
@@ -235,30 +250,46 @@
               {{ getModuleLabel(selectedLog.module) }}
             </a-tag>
           </a-descriptions-item>
-          <a-descriptions-item label="操作描述">{{ selectedLog.operationDesc || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="操作描述">{{
+            selectedLog.operationDesc || "-"
+          }}</a-descriptions-item>
           <a-descriptions-item label="IP 地址">
-            {{ selectedLog.ipAddress || '-' }} ({{ getIpLocation(selectedLog.ipAddress) }})
+            {{ selectedLog.ipAddress || "-" }} ({{
+              getIpLocation(selectedLog.ipAddress)
+            }})
           </a-descriptions-item>
           <a-descriptions-item label="User Agent">
-            <div class="detail-block">{{ selectedLog.userAgent || '-' }}</div>
+            <div class="detail-block">{{ selectedLog.userAgent || "-" }}</div>
           </a-descriptions-item>
-          <a-descriptions-item label="请求路径">{{ selectedLog.requestPath || '-' }}</a-descriptions-item>
-          <a-descriptions-item label="请求方法">{{ selectedLog.requestMethod || '-' }}</a-descriptions-item>
+          <a-descriptions-item label="请求路径">{{
+            selectedLog.requestPath || "-"
+          }}</a-descriptions-item>
+          <a-descriptions-item label="请求方法">{{
+            selectedLog.requestMethod || "-"
+          }}</a-descriptions-item>
           <a-descriptions-item label="请求参数">
-            <div class="detail-block">{{ selectedLog.requestParams || '-' }}</div>
+            <div class="detail-block">
+              {{ selectedLog.requestParams || "-" }}
+            </div>
           </a-descriptions-item>
           <a-descriptions-item label="响应结果">
-            <div class="detail-block">{{ selectedLog.responseResult || '-' }}</div>
+            <div class="detail-block">
+              {{ selectedLog.responseResult || "-" }}
+            </div>
           </a-descriptions-item>
           <a-descriptions-item label="状态">
             <a-tag :color="selectedLog.status === 1 ? 'success' : 'error'">
-              {{ selectedLog.status === 1 ? '成功' : '失败' }}
+              {{ selectedLog.status === 1 ? "成功" : "失败" }}
             </a-tag>
           </a-descriptions-item>
           <a-descriptions-item v-if="selectedLog.errorMessage" label="错误信息">
-            <div class="detail-block error-message">{{ selectedLog.errorMessage }}</div>
+            <div class="detail-block error-message">
+              {{ selectedLog.errorMessage }}
+            </div>
           </a-descriptions-item>
-          <a-descriptions-item label="操作时间">{{ formatDateTime(selectedLog.operationTime) }}</a-descriptions-item>
+          <a-descriptions-item label="操作时间">{{
+            formatDateTime(selectedLog.operationTime)
+          }}</a-descriptions-item>
         </a-descriptions>
       </div>
     </a-modal>
@@ -266,8 +297,8 @@
 </template>
 
 <script setup>
-import { onMounted, reactive, ref } from 'vue'
-import { message } from 'ant-design-vue'
+import { onMounted, reactive, ref } from "vue";
+import { message } from "ant-design-vue";
 import {
   CheckCircleOutlined,
   ClockCircleOutlined,
@@ -276,115 +307,138 @@ import {
   ExportOutlined,
   FileTextOutlined,
   ReloadOutlined,
-  UserOutlined
-} from '@ant-design/icons-vue'
-import { getOperationLogs, getOperationLogStats } from '@/api/admin'
-import AdminPageHeader from '@/components/admin/AdminPageHeader.vue'
+  UserOutlined,
+} from "@ant-design/icons-vue";
+import { getOperationLogs, getOperationLogStats } from "@/api/admin";
+import AdminPageHeader from "@/components/admin/AdminPageHeader.vue";
 
-const searchKeyword = ref('')
-const moduleFilter = ref(undefined)
-const operationFilter = ref(undefined)
-const statusFilter = ref(undefined)
-const dateRange = ref([])
+const searchKeyword = ref("");
+const moduleFilter = ref(undefined);
+const operationFilter = ref(undefined);
+const statusFilter = ref(undefined);
+const dateRange = ref([]);
 
 const stats = reactive({
   totalOperations: 0,
   successOperations: 0,
   failedOperations: 0,
   activeUsers: 0,
-  todayOperations: 0
-})
+  todayOperations: 0,
+});
 
-const logList = ref([])
-const loading = ref(false)
+const logList = ref([]);
+const loading = ref(false);
 const pagination = reactive({
   current: 1,
   pageSize: 20,
   total: 0,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`
-})
+  showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+});
 
-const showDetailModal = ref(false)
-const selectedLog = ref(null)
+const showDetailModal = ref(false);
+const selectedLog = ref(null);
 
 const columns = [
-  { title: '用户', dataIndex: 'username', key: 'username', width: 140 },
-  { title: '操作类型', dataIndex: 'operationType', key: 'operationType', width: 110 },
-  { title: '模块', dataIndex: 'module', key: 'module', width: 130 },
-  { title: '操作描述', dataIndex: 'operationDesc', key: 'operationDesc', ellipsis: true, width: 220 },
-  { title: 'IP 地址', dataIndex: 'ipAddress', key: 'ipAddress', width: 160 },
-  { title: '状态', dataIndex: 'status', key: 'status', width: 90 },
-  { title: '操作时间', dataIndex: 'operationTime', key: 'operationTime', width: 190 },
-  { title: '操作', key: 'action', width: 140, fixed: 'right' }
-]
+  { title: "用户", dataIndex: "username", key: "username", width: 140 },
+  {
+    title: "操作类型",
+    dataIndex: "operationType",
+    key: "operationType",
+    width: 110,
+  },
+  { title: "模块", dataIndex: "module", key: "module", width: 130 },
+  {
+    title: "操作描述",
+    dataIndex: "operationDesc",
+    key: "operationDesc",
+    ellipsis: true,
+    width: 220,
+  },
+  { title: "IP 地址", dataIndex: "ipAddress", key: "ipAddress", width: 160 },
+  { title: "状态", dataIndex: "status", key: "status", width: 90 },
+  {
+    title: "操作时间",
+    dataIndex: "operationTime",
+    key: "operationTime",
+    width: 190,
+  },
+  { title: "操作", key: "action", width: 140, fixed: "right" },
+];
 
 const getAvatarColor = (username) => {
-  const colors = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae', '#7cb305', '#1890ff']
-  const index = username.charCodeAt(0) % colors.length
-  return colors[index]
-}
+  const colors = [
+    "#f56a00",
+    "#7265e6",
+    "#ffbf00",
+    "#00a2ae",
+    "#7cb305",
+    "#1890ff",
+  ];
+  const index = username.charCodeAt(0) % colors.length;
+  return colors[index];
+};
 
 const getOperationTypeColor = (type) => {
   const colorMap = {
-    CREATE: 'green',
-    UPDATE: 'blue',
-    DELETE: 'red',
-    QUERY: 'cyan',
-    VIEW: 'cyan',
-    LOGIN: 'purple',
-    LOGOUT: 'orange'
-  }
-  return colorMap[type] || 'default'
-}
+    CREATE: "green",
+    UPDATE: "blue",
+    DELETE: "red",
+    QUERY: "cyan",
+    VIEW: "cyan",
+    LOGIN: "purple",
+    LOGOUT: "orange",
+  };
+  return colorMap[type] || "default";
+};
 
 const getOperationTypeLabel = (type) => {
   const labelMap = {
-    CREATE: '创建',
-    UPDATE: '更新',
-    DELETE: '删除',
-    QUERY: '查询',
-    VIEW: '查看',
-    LOGIN: '登录',
-    LOGOUT: '登出'
-  }
-  return labelMap[type] || type || '-'
-}
+    CREATE: "创建",
+    UPDATE: "更新",
+    DELETE: "删除",
+    QUERY: "查询",
+    VIEW: "查看",
+    LOGIN: "登录",
+    LOGOUT: "登出",
+  };
+  return labelMap[type] || type || "-";
+};
 
 const getModuleColor = (module) => {
   const colorMap = {
-    USER_MANAGEMENT: 'blue',
-    URL_MANAGEMENT: 'green',
-    SYSTEM_MONITOR: 'purple',
-    SYSTEM_CONFIG: 'purple',
-    LOGIN_LOGOUT: 'orange',
-    AUTH: 'gold'
-  }
-  return colorMap[module] || 'default'
-}
+    USER_MANAGEMENT: "blue",
+    URL_MANAGEMENT: "green",
+    SYSTEM_MONITOR: "purple",
+    SYSTEM_CONFIG: "purple",
+    LOGIN_LOGOUT: "orange",
+    AUTH: "gold",
+  };
+  return colorMap[module] || "default";
+};
 
 const getModuleLabel = (module) => {
   const labelMap = {
-    USER_MANAGEMENT: '用户管理',
-    URL_MANAGEMENT: '短链管理',
-    SYSTEM_MONITOR: '系统监控',
-    SYSTEM_CONFIG: '系统配置',
-    LOGIN_LOGOUT: '登录登出',
-    AUTH: '认证授权'
-  }
-  return labelMap[module] || module || '-'
-}
+    USER_MANAGEMENT: "用户管理",
+    URL_MANAGEMENT: "短链管理",
+    SYSTEM_MONITOR: "系统监控",
+    SYSTEM_CONFIG: "系统配置",
+    LOGIN_LOGOUT: "登录登出",
+    AUTH: "认证授权",
+  };
+  return labelMap[module] || module || "-";
+};
 
 const getIpLocation = (ip) => {
-  if (!ip) return '未知'
-  const tags = ['华北', '华东', '华南', '西南', '西北', '东北']
+  if (!ip) return "未知";
+  const tags = ["华北", "华东", "华南", "西南", "西北", "东北"];
   const score = ip
-    .split('.')
+    .split(".")
     .map((part) => Number(part) || 0)
-    .reduce((sum, value) => sum + value, 0)
-  return tags[score % tags.length]
-}
+    .reduce((sum, value) => sum + value, 0);
+  return tags[score % tags.length];
+};
 
 const buildParams = () => {
   const params = {
@@ -393,158 +447,175 @@ const buildParams = () => {
     keyword: searchKeyword.value || undefined,
     module: moduleFilter.value,
     operationType: operationFilter.value,
-    status: statusFilter.value
-  }
+    status: statusFilter.value,
+  };
 
   if (dateRange.value?.length === 2) {
-    params.startDate = dateRange.value[0]?.toISOString?.()
-    params.endDate = dateRange.value[1]?.toISOString?.()
+    params.startDate = dateRange.value[0]?.toISOString?.();
+    params.endDate = dateRange.value[1]?.toISOString?.();
   }
 
-  return params
-}
+  return params;
+};
 
 const loadStats = async () => {
   try {
-    const response = await getOperationLogStats()
+    const response = await getOperationLogStats();
     if (response.code === 200) {
-      Object.assign(stats, response.data || {})
+      Object.assign(stats, response.data || {});
     }
   } catch (error) {
-    console.error('Failed to load log stats:', error)
-    message.error('加载日志统计失败')
+    console.error("Failed to load log stats:", error);
+    message.error("加载日志统计失败");
   }
-}
+};
 
 const loadLogList = async () => {
-  loading.value = true
+  loading.value = true;
   try {
-    const response = await getOperationLogs(buildParams())
+    const response = await getOperationLogs(buildParams());
     if (response.code === 200) {
-      logList.value = response.data?.list || []
-      pagination.total = response.data?.total || 0
+      logList.value = response.data?.list || [];
+      pagination.total = response.data?.total || 0;
     }
   } catch (error) {
-    console.error('Failed to load log list:', error)
-    logList.value = []
-    pagination.total = 0
-    message.error('加载日志列表失败')
+    console.error("Failed to load log list:", error);
+    logList.value = [];
+    pagination.total = 0;
+    message.error("加载日志列表失败");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const handleSearch = () => {
-  pagination.current = 1
-  loadLogList()
-}
+  pagination.current = 1;
+  loadLogList();
+};
 
 const handleFilter = () => {
-  pagination.current = 1
-  loadLogList()
-}
+  pagination.current = 1;
+  loadLogList();
+};
 
 const handleDateFilter = () => {
-  pagination.current = 1
-  loadLogList()
-}
+  pagination.current = 1;
+  loadLogList();
+};
 
 const handleTableChange = (pag) => {
-  pagination.current = pag.current
-  pagination.pageSize = pag.pageSize
-  loadLogList()
-}
+  pagination.current = pag.current;
+  pagination.pageSize = pag.pageSize;
+  loadLogList();
+};
 
 const handleRefresh = () => {
-  searchKeyword.value = ''
-  moduleFilter.value = undefined
-  operationFilter.value = undefined
-  statusFilter.value = undefined
-  dateRange.value = []
-  pagination.current = 1
-  loadStats()
-  loadLogList()
-}
+  searchKeyword.value = "";
+  moduleFilter.value = undefined;
+  operationFilter.value = undefined;
+  statusFilter.value = undefined;
+  dateRange.value = [];
+  pagination.current = 1;
+  loadStats();
+  loadLogList();
+};
 
 const viewDetails = (record) => {
-  selectedLog.value = record
-  showDetailModal.value = true
-}
+  selectedLog.value = record;
+  showDetailModal.value = true;
+};
 
 const viewUserLogs = (record) => {
-  searchKeyword.value = record.username || ''
-  pagination.current = 1
-  loadLogList()
-}
+  searchKeyword.value = record.username || "";
+  pagination.current = 1;
+  loadLogList();
+};
 
 const handleExport = async () => {
   try {
     const params = {
       ...buildParams(),
       page: 1,
-      size: Math.max(pagination.total || 100, 100)
-    }
-    const response = await getOperationLogs(params)
+      size: Math.max(pagination.total || 100, 100),
+    };
+    const response = await getOperationLogs(params);
     if (response.code === 200 && response.data?.list?.length) {
-      exportLogsToCSV(response.data.list, '操作日志')
-      message.success('日志导出成功')
-      return
+      exportLogsToCSV(response.data.list, "操作日志");
+      message.success("日志导出成功");
+      return;
     }
-    message.warning('没有可导出的日志数据')
+    message.warning("没有可导出的日志数据");
   } catch (error) {
-    console.error('Failed to export logs:', error)
-    message.error('导出失败，请稍后重试')
+    console.error("Failed to export logs:", error);
+    message.error("导出失败，请稍后重试");
   }
-}
+};
 
 const exportLogsToCSV = (data, filename) => {
-  const headers = ['日志ID', '用户ID', '用户名', '操作类型', '操作模块', '操作描述', 'IP地址', '状态', '操作时间']
+  const headers = [
+    "日志ID",
+    "用户ID",
+    "用户名",
+    "操作类型",
+    "操作模块",
+    "操作描述",
+    "IP地址",
+    "状态",
+    "操作时间",
+  ];
   const csvRows = data.map((item) => [
-    item.id || '',
-    item.userId || '',
-    item.username || '',
+    item.id || "",
+    item.userId || "",
+    item.username || "",
     getOperationTypeLabel(item.operationType),
     getModuleLabel(item.module),
-    item.operationDesc || '',
-    item.ipAddress || '',
-    item.status === 1 ? '成功' : '失败',
-    formatDateTime(item.operationTime)
-  ])
+    item.operationDesc || "",
+    item.ipAddress || "",
+    item.status === 1 ? "成功" : "失败",
+    formatDateTime(item.operationTime),
+  ]);
 
-  const content = [headers.join(','), ...csvRows.map((row) => row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(','))].join('\n')
-  const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  URL.revokeObjectURL(url)
-}
+  const content = [
+    headers.join(","),
+    ...csvRows.map((row) =>
+      row.map((field) => `"${String(field).replace(/"/g, '""')}"`).join(","),
+    ),
+  ].join("\n");
+  const blob = new Blob(["\uFEFF" + content], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${filename}_${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
 
 const formatDateTime = (dateTime) => {
-  if (!dateTime) return '-'
-  return new Date(dateTime).toLocaleString()
-}
+  if (!dateTime) return "-";
+  return new Date(dateTime).toLocaleString();
+};
 
 const formatTimeAgo = (dateTime) => {
-  if (!dateTime) return '-'
-  const diff = Date.now() - new Date(dateTime).getTime()
-  const minutes = Math.floor(diff / 60000)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
+  if (!dateTime) return "-";
+  const diff = Date.now() - new Date(dateTime).getTime();
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
 
-  if (days > 0) return `${days} 天前`
-  if (hours > 0) return `${hours} 小时前`
-  if (minutes > 0) return `${minutes} 分钟前`
-  return '刚刚'
-}
+  if (days > 0) return `${days} 天前`;
+  if (hours > 0) return `${hours} 小时前`;
+  if (minutes > 0) return `${minutes} 分钟前`;
+  return "刚刚";
+};
 
 onMounted(() => {
-  loadStats()
-  loadLogList()
-})
+  loadStats();
+  loadLogList();
+});
 </script>
 
 <style scoped>

@@ -12,7 +12,7 @@
           <HomeOutlined />
           返回首页
         </a-button>
-        <a-button size="large" @click="goBack" style="margin-left: 16px;">
+        <a-button size="large" style="margin-left: 16px" @click="goBack">
           <ArrowLeftOutlined />
           返回上页
         </a-button>
@@ -24,8 +24,8 @@
           placeholder="搜索功能、页面或内容..."
           enter-button="搜索"
           size="large"
+          style="max-width: 400px; margin: 0 auto"
           @search="handleSearch"
-          style="max-width: 400px; margin: 0 auto;"
         />
       </div>
     </div>
@@ -33,56 +33,56 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { message } from 'ant-design-vue'
-import { HomeOutlined, ArrowLeftOutlined } from '@ant-design/icons-vue'
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { message } from "ant-design-vue";
+import { HomeOutlined, ArrowLeftOutlined } from "@ant-design/icons-vue";
 
-const router = useRouter()
-const searchKeyword = ref('')
+const router = useRouter();
+const searchKeyword = ref("");
 
 /**
  * 返回首页
  */
 const goHome = () => {
-  router.push('/')
-}
+  router.push("/");
+};
 
 /**
  * 返回上页
  */
 const goBack = () => {
   if (window.history.length > 1) {
-    router.back()
+    router.back();
   } else {
-    router.push('/')
+    router.push("/");
   }
-}
+};
 
 /**
  * 处理搜索
  */
 const handleSearch = () => {
   if (!searchKeyword.value.trim()) {
-    message.warning('请输入搜索关键词')
-    return
+    message.warning("请输入搜索关键词");
+    return;
   }
 
   // 根据关键词跳转到相应页面
-  const keyword = searchKeyword.value.toLowerCase()
+  const keyword = searchKeyword.value.toLowerCase();
 
-  if (keyword.includes('管理') || keyword.includes('后台')) {
-    router.push('/admin')
-  } else if (keyword.includes('统计') || keyword.includes('数据')) {
-    router.push('/stats')
-  } else if (keyword.includes('登录')) {
-    router.push('/login')
-  } else if (keyword.includes('生成') || keyword.includes('短网址')) {
-    router.push('/')
+  if (keyword.includes("管理") || keyword.includes("后台")) {
+    router.push("/admin");
+  } else if (keyword.includes("统计") || keyword.includes("数据")) {
+    router.push("/stats");
+  } else if (keyword.includes("登录")) {
+    router.push("/login");
+  } else if (keyword.includes("生成") || keyword.includes("短网址")) {
+    router.push("/");
   } else {
-    message.info('未找到相关页面，请尝试其他关键词')
+    message.info("未找到相关页面，请尝试其他关键词");
   }
-}
+};
 </script>
 
 <style scoped>

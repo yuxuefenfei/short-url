@@ -16,32 +16,32 @@
 </template>
 
 <script setup>
-import { computed, provide } from 'vue'
-import zhCN from 'ant-design-vue/es/locale/zh_CN'
-import NotificationContainer from '@/components/common/NotificationContainer.vue'
-import LoadingMask from '@/components/common/LoadingMask.vue'
-import { useUserStore } from '@/stores/user'
-import { useUrlStore } from '@/stores/url'
+import { computed, provide } from "vue";
+import zhCN from "ant-design-vue/es/locale/zh_CN";
+import NotificationContainer from "@/components/common/NotificationContainer.vue";
+import LoadingMask from "@/components/common/LoadingMask.vue";
+import { useUserStore } from "@/stores/user";
+import { useUrlStore } from "@/stores/url";
 
-const userStore = useUserStore()
-const urlStore = useUrlStore()
+const userStore = useUserStore();
+const urlStore = useUrlStore();
 
-provide('userStore', userStore)
-provide('urlStore', urlStore)
+provide("userStore", userStore);
+provide("urlStore", urlStore);
 
 const appConfig = computed(() => ({
-  version: '1.0.0',
-  name: '短网址管理系统',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || '/api'
-}))
+  version: "1.0.0",
+  name: "短网址管理系统",
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || "/api",
+}));
 
-provide('appConfig', appConfig)
+provide("appConfig", appConfig);
 
 const handleError = (error) => {
-  console.error('应用级错误:', error)
-}
+  console.error("应用级错误:", error);
+};
 
-provide('handleError', handleError)
+provide("handleError", handleError);
 </script>
 
 <style scoped>
@@ -85,4 +85,3 @@ provide('handleError', handleError)
   }
 }
 </style>
-

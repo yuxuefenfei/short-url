@@ -13,8 +13,7 @@
       </div>
 
       <a-menu
-        v-model:selectedKeys="selectedKeys"
-        v-model:openKeys="openKeys"
+        v-model:selected-keys="selectedKeys"
         theme="dark"
         mode="inline"
         :items="menuItems"
@@ -48,7 +47,9 @@
               <a-tooltip title="系统状态">
                 <div class="status-indicator" :class="systemStatusClass">
                   <CheckCircleOutlined v-if="systemStatus === 'healthy'" />
-                  <ExclamationCircleOutlined v-else-if="systemStatus === 'warning'" />
+                  <ExclamationCircleOutlined
+                    v-else-if="systemStatus === 'warning'"
+                  />
                   <CloseCircleOutlined v-else />
                 </div>
               </a-tooltip>
@@ -60,7 +61,9 @@
                 <a-avatar size="small" class="user-avatar">
                   <template #icon><UserOutlined /></template>
                 </a-avatar>
-                <span class="user-name">{{ userStore.userInfo?.username }}</span>
+                <span class="user-name">{{
+                  userStore.userInfo?.username
+                }}</span>
                 <DownOutlined class="dropdown-arrow" />
               </div>
 
@@ -109,10 +112,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useUserStore } from '@/stores/user'
-import { message, Modal } from 'ant-design-vue'
+import { ref, computed, onMounted, watch, h } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useUserStore } from "@/stores/user";
+import { message, Modal } from "ant-design-vue";
 import {
   MenuUnfoldOutlined,
   MenuFoldOutlined,
@@ -120,11 +123,15 @@ import {
   SettingOutlined,
   LogoutOutlined,
   DownOutlined,
+  AreaChartOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
-  CloseCircleOutlined
-} from '@ant-design/icons-vue'
-import { logout } from '@/api/auth'
+  CloseCircleOutlined,
+  FileTextOutlined,
+  LinkOutlined,
+  TeamOutlined,
+} from "@ant-design/icons-vue";
+import { logout } from "@/api/auth";
 
 // 图标组件
 const LinkIcon = {
@@ -133,206 +140,200 @@ const LinkIcon = {
       <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-  `
-}
+  `,
+};
 
-const router = useRouter()
-const route = useRoute()
-const userStore = useUserStore()
+const router = useRouter();
+const route = useRoute();
+const userStore = useUserStore();
 
 // 侧边栏状态
-const collapsed = ref(false)
-const selectedKeys = ref(['dashboard'])
-const openKeys = ref(['sub1'])
-
+const collapsed = ref(false);
+const selectedKeys = ref(["dashboard"]);
 // 系统状态 (healthy: 正常, warning: 警告, error: 错误)
-const systemStatus = ref('healthy')
+const systemStatus = ref("healthy");
 
 // 计算属性
 const systemStatusClass = computed(() => {
   return {
-    'status-healthy': systemStatus.value === 'healthy',
-    'status-warning': systemStatus.value === 'warning',
-    'status-error': systemStatus.value === 'error'
-  }
-})
+    "status-healthy": systemStatus.value === "healthy",
+    "status-warning": systemStatus.value === "warning",
+    "status-error": systemStatus.value === "error",
+  };
+});
 
 // 面包屑导航
 const breadcrumbs = computed(() => {
-  const matched = route.matched
-  return matched.map(item => ({
-    path: item.path,
-    title: item.meta?.title || item.name || '未知页面'
-  })).filter(item => item.title)
-})
+  const matched = route.matched;
+  return matched
+    .map((item) => ({
+      path: item.path,
+      title: item.meta?.title || item.name || "未知页面",
+    }))
+    .filter((item) => item.title);
+});
 
 // 菜单项配置
-const menuItems = reactive([
+const menuItems = [
   {
-    key: 'dashboard',
+    key: "dashboard",
     icon: () => h(AreaChartOutlined),
-    label: '数据面板',
-    title: '数据面板'
+    label: "数据面板",
+    title: "数据面板",
   },
   {
-    key: 'urls',
+    key: "urls",
     icon: () => h(LinkOutlined),
-    label: '短网址管理',
-    title: '短网址管理'
+    label: "短网址管理",
+    title: "短网址管理",
   },
   {
-    key: 'users',
+    key: "users",
     icon: () => h(TeamOutlined),
-    label: '用户管理',
-    title: '用户管理'
+    label: "用户管理",
+    title: "用户管理",
   },
   {
-    key: 'logs',
+    key: "logs",
     icon: () => h(FileTextOutlined),
-    label: '操作日志',
-    title: '操作日志'
+    label: "操作日志",
+    title: "操作日志",
   },
   {
-    key: 'settings',
+    key: "settings",
     icon: () => h(SettingOutlined),
-    label: '系统设置',
-    title: '系统设置'
-  }
-])
-
-// 需要导入的图标
-import {
-  AreaChartOutlined,
-  LinkOutlined,
-  TeamOutlined,
-  FileTextOutlined
-} from '@ant-design/icons-vue'
-
-import { h } from 'vue'
+    label: "系统设置",
+    title: "系统设置",
+  },
+];
 
 /**
  * 切换侧边栏折叠状态
  */
 const toggleCollapsed = () => {
-  collapsed.value = !collapsed.value
-}
+  collapsed.value = !collapsed.value;
+};
 
 /**
  * 处理菜单点击
  */
 const handleMenuClick = ({ key }) => {
-  selectedKeys.value = [key]
+  selectedKeys.value = [key];
 
   // 根据菜单key跳转到对应页面
   const routeMap = {
-    dashboard: '/admin/dashboard',
-    urls: '/admin/urls',
-    users: '/admin/users',
-    logs: '/admin/logs',
-    settings: '/admin/settings'
-  }
+    dashboard: "/admin/dashboard",
+    urls: "/admin/urls",
+    users: "/admin/users",
+    logs: "/admin/logs",
+    settings: "/admin/settings",
+  };
 
-  const targetRoute = routeMap[key]
+  const targetRoute = routeMap[key];
   if (targetRoute && route.path !== targetRoute) {
-    router.push(targetRoute)
+    router.push(targetRoute);
   }
-}
+};
 
 /**
  * 跳转到个人资料页面
  */
 const goToProfile = () => {
-  router.push('/admin/profile')
-}
+  router.push("/admin/profile");
+};
 
 /**
  * 跳转到系统设置页面
  */
 const goToSettings = () => {
-  router.push('/admin/settings')
-}
+  router.push("/admin/settings");
+};
 
 /**
  * 处理退出登录
  */
 const handleLogout = () => {
   Modal.confirm({
-    title: '确认退出',
-    content: '您确定要退出登录吗？',
-    okText: '确定',
-    cancelText: '取消',
+    title: "确认退出",
+    content: "您确定要退出登录吗？",
+    okText: "确定",
+    cancelText: "取消",
     onOk: async () => {
       try {
         // 调用登出API
-        await logout(userStore.token)
+        await logout(userStore.token);
 
         // 清除本地存储的用户信息
-        userStore.logout()
+        userStore.logout();
 
-        message.success('已退出登录')
+        message.success("已退出登录");
 
         // 跳转到登录页面
-        router.push('/login')
+        router.push("/login");
       } catch (error) {
-        console.error('退出登录失败:', error)
+        console.error("退出登录失败:", error);
 
         // 即使API调用失败，也清除本地状态
-        userStore.logout()
-        router.push('/login')
+        userStore.logout();
+        router.push("/login");
       }
-    }
-  })
-}
+    },
+  });
+};
 
 /**
  * 检查用户登录状态
  */
 const checkAuthStatus = () => {
   if (!userStore.isLoggedIn) {
-    router.push('/login')
-    return
+    router.push("/login");
+    return;
   }
 
-  if (userStore.userInfo?.role !== 'ADMIN') {
-    message.error('权限不足，需要管理员权限')
-    router.push('/unauthorized')
-    return
+  if (userStore.userInfo?.role !== "ADMIN") {
+    message.error("权限不足，需要管理员权限");
+    router.push("/");
+    return;
   }
-}
+};
 
 /**
  * 同步当前路由到菜单选中状态
  */
 const syncMenuWithRoute = () => {
   const pathMap = {
-    '/admin/dashboard': 'dashboard',
-    '/admin/urls': 'urls',
-    '/admin/users': 'users',
-    '/admin/logs': 'logs',
-    '/admin/settings': 'settings'
-  }
+    "/admin/dashboard": "dashboard",
+    "/admin/urls": "urls",
+    "/admin/users": "users",
+    "/admin/logs": "logs",
+    "/admin/profile": "profile",
+    "/admin/settings": "settings",
+  };
 
-  const currentKey = pathMap[route.path]
+  const currentKey = pathMap[route.path];
   if (currentKey) {
-    selectedKeys.value = [currentKey]
+    selectedKeys.value = [currentKey];
   }
-}
+};
 
 /**
  * 初始化
  */
 onMounted(() => {
-  checkAuthStatus()
-  syncMenuWithRoute()
-})
+  checkAuthStatus();
+  syncMenuWithRoute();
+});
 
 /**
  * 监听路由变化
  */
-watch(() => route.path, () => {
-  checkAuthStatus()
-  syncMenuWithRoute()
-})
+watch(
+  () => route.path,
+  () => {
+    checkAuthStatus();
+    syncMenuWithRoute();
+  },
+);
 </script>
 
 <style scoped>
