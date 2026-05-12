@@ -129,6 +129,7 @@ public class UrlService {
 
     @Transactional
     public void updateUrlStatus(Long id, Integer status) {
+        validateStatus(status);
         ShortUrlMapping mapping = urlMappingDao.selectOneById(id);
         if (mapping == null) {
             throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
@@ -140,9 +141,13 @@ public class UrlService {
     }
 
     public ShortUrlMapping getUrlById(Long id) {
-        return Optional.ofNullable(id)
+        ShortUrlMapping mapping = Optional.ofNullable(id)
                 .map(urlMappingDao::selectOneById)
                 .orElse(null);
+        if (mapping == null) {
+            throw new BusinessException(ResponseStatus.SHORT_URL_NOT_EXIST);
+        }
+        return mapping;
     }
 
     @Transactional
@@ -207,14 +212,20 @@ public class UrlService {
         QueryWrapper queryWrapper = QueryWrapper.create();
 
         if (StringUtils.hasText(keyword)) {
-            queryWrapper.where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.ORIGINAL_URL.like(keyword))
+            queryWrapper.where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.ORIGINAL_URL.like(keyword)
                     .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.TITLE.like(keyword))
-                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.like(keyword));
+                    .or(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.like(keyword)));
         }
         if (status != null) {
             queryWrapper.and(ShortUrlMappingTableDef.SHORT_URL_MAPPING.STATUS.eq(status));
         }
         return queryWrapper;
+    }
+
+    private void validateStatus(Integer status) {
+        if (status == null || (status != 0 && status != 1)) {
+            throw new BusinessException(ResponseStatus.BAD_REQUEST.getCode(), "短链状态只能为 0 或 1");
+        }
     }
 
     private Long getTodayClicks(String shortKey) {
@@ -298,14 +309,10 @@ public class UrlService {
             Boolean success = redisTemplate.opsForValue().setIfAbsent(
                     RedisKeyConstants.SHORT_URL_KEY_LOCK_PREFIX + shortKey, "1", 24, TimeUnit.HOURS
             );
-            if (Boolean.TRUE.equals(success)) {
-                return shortKey;
-            }
-
             ShortUrlMapping existing = urlMappingDao.selectOneByQuery(
                     QueryWrapper.create().where(ShortUrlMappingTableDef.SHORT_URL_MAPPING.SHORT_KEY.eq(shortKey))
             );
-            if (existing == null) {
+            if (Boolean.TRUE.equals(success) && existing == null) {
                 return shortKey;
             }
         }

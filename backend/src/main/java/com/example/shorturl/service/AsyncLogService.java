@@ -3,10 +3,8 @@ package com.example.shorturl.service;
 import com.example.shorturl.dao.AccessLogDao;
 import com.example.shorturl.dao.OperationLogDao;
 import com.example.shorturl.dao.UrlMappingDao;
-import com.example.shorturl.model.entity.ShortUrlMapping;
 import com.example.shorturl.model.entity.UrlAccessLog;
 import com.example.shorturl.model.entity.UserOperationLog;
-import com.mybatisflex.core.query.QueryWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import lombok.RequiredArgsConstructor;
@@ -147,17 +145,7 @@ public class AsyncLogService {
                 return;
             }
 
-            int result = 0;
-            // 查询当前映射
-            ShortUrlMapping mapping = urlMappingDao.selectOneByQuery(
-                    QueryWrapper.create().eq("short_key", shortKey));
-
-            if (mapping != null) {
-                // 更新点击数
-                mapping.setClickCount(java.util.Objects.requireNonNullElse(mapping.getClickCount(), 0L) + 1);
-                urlMappingDao.update(mapping);
-                result = 1; // 表示更新成功
-            }
+            int result = urlMappingDao.incrementClickCount(shortKey);
 
             if (result > 0) {
                 log.debug("点击次数更新成功: shortKey={}", shortKey);

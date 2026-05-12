@@ -3,6 +3,8 @@ package com.example.shorturl.dao;
 import com.example.shorturl.model.entity.ShortUrlMapping;
 import com.mybatisflex.core.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 
 /**
  * 短网址映射数据访问对象
@@ -24,4 +26,11 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UrlMappingDao extends BaseMapper<ShortUrlMapping> {
 
+    @Update("""
+            UPDATE short_url_mapping
+            SET click_count = COALESCE(click_count, 0) + 1,
+                updated_time = CURRENT_TIMESTAMP
+            WHERE short_key = #{shortKey}
+            """)
+    int incrementClickCount(@Param("shortKey") String shortKey);
 }
